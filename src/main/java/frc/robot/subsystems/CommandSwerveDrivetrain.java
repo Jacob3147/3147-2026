@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -21,9 +22,12 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -31,7 +35,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
@@ -171,7 +175,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private void configureAutoBuilder() {
         try {
-            var config = RobotConfig.fromGUISettings();
+            //var config = RobotConfig.fromGUISettings();
+            RobotConfig config = new RobotConfig
+                                (
+                                    Pounds.of(150), //find exact later - this is approx max weight plus bumper and battery
+                                    MomentOfInertia.ofBaseUnits(6, KilogramSquareMeters),   //find exact later
+                                    new ModuleConfig
+                                    (
+                                        TunerConstants.kWheelRadius,
+                                        TunerConstants.kSpeedAt12Volts,
+                                        1.2,
+                                        DCMotor.getKrakenX60(1),
+                                        6.75,
+                                        TunerConstants.kSlipCurrent,
+                                        1
+                                    ),
+                                    new Translation2d[] 
+                                    {
+                                        TunerConstants.kFrontLeftPos,
+                                        TunerConstants.kFrontRightPos,
+                                        TunerConstants.kBackLeftPos,
+                                        TunerConstants.kBackRightPos
+                                    }
+                                 );
             AutoBuilder.configure(
                 () -> getState().Pose,   // Supplier of current robot pose
                 this::resetAllPoses,         // Consumer for seeding pose against auto
