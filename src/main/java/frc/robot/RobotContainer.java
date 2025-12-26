@@ -44,9 +44,6 @@ public class RobotContainer
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-    private final SwerveRequest.RobotCentric forwardStraight = new SwerveRequest.RobotCentric()
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
     
@@ -83,10 +80,7 @@ public class RobotContainer
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-        // cancelling on release.
-        joystick.button(7).whileTrue(m_exampleSubsystem.exampleMethodCommand());
-
+        
         joystick.button(8).onTrue(Commands.runOnce(() -> drivetrain.resetAllPoses(new Pose2d(0,0,new Rotation2d(0)))));
 
         // Note that X is defined as forward according to WPILib convention,
@@ -99,7 +93,7 @@ public class RobotContainer
                     .withRotationalRate(-joystick.getTwist() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
-
+        joystick.trigger().whileTrue(drivetrain.autoAlign());
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
         joystick.trigger().and(joystick.button(4)).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));

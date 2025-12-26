@@ -2,6 +2,10 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.Constants.LocalizationConstants.*;
+import static frc.robot.Constants.AutopilotConstants.*;
+
+import frc.robot.utility.Autopilot.*;
+import frc.robot.utility.Autopilot.Autopilot.APResult;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -9,9 +13,10 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
@@ -22,11 +27,13 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -35,6 +42,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
 import gg.questnav.questnav.PoseFrame;
@@ -45,6 +53,8 @@ import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;
 import limelight.networktables.LimelightSettings.LEDMode;
+import static edu.wpi.first.units.Unit.*;
+
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -70,6 +80,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
+    
+
     QuestNav questNav;
     Limelight limelight;
 
@@ -82,6 +94,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose3d limelight_robot_pose;
     LimelightPoseEstimator limelightPoseEstimator;
     
+    APTarget autopilotTarget = new APTarget(
+                                    new Pose2d(
+                                        Meters.of(5.28), 
+                                        Meters.of(2.84), 
+                                        new Rotation2d(Degrees.of(120))
+                                    )
+                                ).withEntryAngle(new Rotation2d(Degrees.of(120)));
+
+    private final SwerveRequest.FieldCentricFacingAngle m_autopilotRequest = new SwerveRequest.FieldCentricFacingAngle()
+        .withHeadingPID(2,0,0)
+        .withForwardPerspective(ForwardPerspectiveValue.BlueAlliance) //use field perspective rather than driver station perspective
+        .withDriveRequestType(DriveRequestType.Velocity);
+
+    private final SwerveRequest.Idle stopRequest = new SwerveRequest.Idle();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -113,6 +139,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         limelightPoseEstimator = limelight.getPoseEstimator(true);
 
         configureAutoBuilder();
+
     }
 
     /**
@@ -165,15 +192,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Matrix<N3, N1> odometryStandardDeviation,
         Matrix<N3, N1> visionStandardDeviation,
         SwerveModuleConstants<?, ?, ?>... modules
-    ) {
+    ) 
+    {
         super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
-        if (Utils.isSimulation()) {
+        if (Utils.isSimulation()) 
+        {
             startSimThread();
         }
         configureAutoBuilder();
     }
 
-    private void configureAutoBuilder() {
+    private void configureAutoBuilder() 
+    {
         try {
             //var config = RobotConfig.fromGUISettings();
             RobotConfig config = new RobotConfig
@@ -260,20 +290,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         
     }
 
-    private void startSimThread() {
-        m_lastSimTime = Utils.getCurrentTimeSeconds();
+    public Command autoAlign(/*APTarget target*/) {
+        return this.run(() -> {
+            ChassisSpeeds robotRelativeSpeeds = this.getState().Speeds;
+            Pose2d pose = this.getState().Pose;
+            
 
-        /* Run simulation at a faster rate so PID gains behave more reasonably */
-        m_simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - m_lastSimTime;
-            m_lastSimTime = currentTime;
-
-            /* use the measured time delta, get battery voltage from WPILib */
-            updateSimState(deltaTime, RobotController.getBatteryVoltage());
-        });
-        m_simNotifier.startPeriodic(kSimLoopPeriod);
-    }
+            APResult output = kAutopilot.calculate(pose, robotRelativeSpeeds, autopilotTarget);
+        
+            /* these speeds are field relative */
+            LinearVelocity veloX = output.getX();
+            LinearVelocity veloY = output.getY();
+            Rotation2d headingReference = output.getHeading();
+        
+            this.setControl(m_autopilotRequest
+                .withVelocityX(veloX)
+                .withVelocityY(veloY)
+                .withTargetDirection(headingReference));
+            })
+                .until(() -> kAutopilot.atTarget(this.getState().Pose, autopilotTarget));
+      }
 
 
     /***********************************
@@ -515,4 +551,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+
+
+
+    private void startSimThread() {
+        m_lastSimTime = Utils.getCurrentTimeSeconds();
+
+        /* Run simulation at a faster rate so PID gains behave more reasonably */
+        m_simNotifier = new Notifier(() -> {
+            final double currentTime = Utils.getCurrentTimeSeconds();
+            double deltaTime = currentTime - m_lastSimTime;
+            m_lastSimTime = currentTime;
+
+            /* use the measured time delta, get battery voltage from WPILib */
+            updateSimState(deltaTime, RobotController.getBatteryVoltage());
+        });
+        m_simNotifier.startPeriodic(kSimLoopPeriod);
+}
+
+
 }

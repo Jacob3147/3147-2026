@@ -12,7 +12,9 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.util.Units;
+import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.math.util.Units.*;
+import frc.robot.utility.Autopilot.*;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -48,7 +50,7 @@ public final class Constants
         public static final Matrix<N3, N1> QUESTNAV_STD_DEVS = VecBuilder.fill(
             0.02,   //trust pose to 2 cm in X and Y
             0.02,
-            Units.degreesToRadians(2)   //trust pose to 2 degrees
+            degreesToRadians(2)   //trust pose to 2 degrees
         );
 
         public static final Pose3d ROBOT_TO_LIMELIGHT = new Pose3d(
@@ -67,7 +69,19 @@ public final class Constants
         public static final Matrix<N3, N1> LIMELIGHT_STD_DEVS = VecBuilder.fill(
             0.2,   //trust pose to 20cm in X and Y (subject to change or may be dynamic)
             0.2,
-            Units.degreesToRadians(999)   //ignore rotation
+            degreesToRadians(999)   //ignore rotation
         );
+    }
+
+    public static class AutopilotConstants
+    {
+        private static final APConstraints kConstraints = new APConstraints(7.0, 3.0);
+
+        private static final APProfile kProfile = new APProfile(kConstraints)
+        .withErrorXY(Inches.of(1))
+        .withErrorTheta(Degrees.of(0.5))
+        .withBeelineRadius(Inches.of(4));
+
+        public static final Autopilot kAutopilot = new Autopilot(kProfile);
     }
 }

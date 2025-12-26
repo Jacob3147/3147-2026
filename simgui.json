@@ -12,6 +12,13 @@
       "/SmartDashboard/PathPlanner": "Alerts"
     }
   },
+  "NetworkTables": {
+    "transitory": {
+      "FMSInfo": {
+        "open": true
+      }
+    }
+  },
   "NetworkTables Info": {
     "visible": true
   }
