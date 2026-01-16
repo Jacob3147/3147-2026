@@ -32,7 +32,9 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 
 /*
@@ -168,6 +170,7 @@ public class ShooterSimTest extends SubsystemBase
         driveVelX = MetersPerSecond.of(speedsSupplier.get().vxMetersPerSecond);
         driveVelY = MetersPerSecond.of(speedsSupplier.get().vyMetersPerSecond);
         
+        
         virtualTarget = new Translation3d (
             target.getX()-shotTime*driveVelX.in(MetersPerSecond),
             target.getY()-shotTime*driveVelY.in(MetersPerSecond),
@@ -179,6 +182,27 @@ public class ShooterSimTest extends SubsystemBase
         virtualShotVelocity = MetersPerSecond.of(distance_to_speed.get(virtualTargetDistance));
         virtualAzimuth = Degrees.of(distance_to_azimuth.get(virtualTargetDistance));
         
+        for(int i = 0; i < 3; i++)
+        {
+            a = 0.5 * gravity.in(MetersPerSecondPerSecond);
+            b = shotVelocity.in(MetersPerSecond)*Math.sin(azimuth.in(Radians));
+            c = shooterHeight.in(Meters) - hub_z;
+
+            shotTime = (-1*b - Math.sqrt(b*b-4*a*c)) / (2*a);
+
+                virtualTarget = new Translation3d (
+                    target.getX()-shotTime*driveVelX.in(MetersPerSecond),
+                    target.getY()-shotTime*driveVelY.in(MetersPerSecond),
+                    target.getZ()
+                );
+
+            robotToVirtualTarget = shooterPose.getTranslation().minus(virtualTarget);
+            virtualTargetDistance = Math.sqrt(Math.pow(robotToVirtualTarget.getX(),2) + Math.pow(robotToVirtualTarget.getY(),2));
+            virtualShotVelocity = MetersPerSecond.of(distance_to_speed.get(virtualTargetDistance));
+            virtualAzimuth = Degrees.of(distance_to_azimuth.get(virtualTargetDistance));
+
+
+        }
 
         virtualHubPublisher.set(virtualTarget);
     }
@@ -187,6 +211,16 @@ public class ShooterSimTest extends SubsystemBase
     {
         return new Rotation2d(robotToVirtualTarget.getX(), robotToVirtualTarget.getY()).plus(Rotation2d.k180deg);
     } 
+;
+    public Trigger aimOk()
+    {
+        return new Trigger(() -> (poseSupplier.get().getRotation().minus(targetYaw()).getDegrees() < 2));
+    }
+
+    public Trigger fireOk()
+    {
+        return new Trigger(() -> virtualTargetDistance > 1);
+    }
 
     public Command fire()
     {

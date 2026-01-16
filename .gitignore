@@ -29,3 +29,4 @@ build/
 logs/
 
 *.jar
+ctre_sim/

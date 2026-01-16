@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.generated.TunerConstants;
 import frc.robot.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -313,12 +314,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         yToSpeaker = our_hub_y - getState().Pose.getY();
         xToSpeaker = our_hub_x - getState().Pose.getX();
-        angleToSpeaker = Rotation2d.fromRadians(Math.atan2(yToSpeaker, xToSpeaker));
     }
 
     public Command aim(Supplier<Double> xStickSupplier, Supplier<Double> yStickSupplier, Supplier<Rotation2d> yawTargetSupplier) {
         return this.run(() -> {
-                  
             this.setControl(m_aimRequest
                 .withVelocityX(xStickSupplier.get())
                 .withVelocityY(yStickSupplier.get())
@@ -326,9 +325,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 //this is annoying - since i'm letting driver control X/Y I still have that flipped by operator perspective
                 //instead of global blue alliance origins. but rotation is flipped 180 when on red, but not in pose...
                 //getoperatorforwarddirection returns a rotation2d of 180 on red, 0 on blue
-                angleError.set(this.getState().Pose.getRotation().minus(angleToSpeaker).getDegrees());
-            })
-                .until(() -> Math.abs(this.getState().Pose.getRotation().minus(angleToSpeaker).getDegrees()) < 2);
+                
+            });
       }
 
     public Command autoAlign(/*APTarget target*/) {

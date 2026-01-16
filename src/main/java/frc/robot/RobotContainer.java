@@ -107,9 +107,9 @@ public class RobotContainer
         joystick.trigger().whileTrue(drivetrain.autoAlign());
 
         //joystick.button(2).whileTrue(
-            drivetrain.setDefaultCommand(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw).repeatedly());
+            drivetrain.setDefaultCommand(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw));
         //);
-        joystick.button(3).onTrue
+        joystick.button(3).and(shooter.aimOk()).and(shooter.fireOk()).onTrue
         (
             shooter.fire()
         );
