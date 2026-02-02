@@ -35,7 +35,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
+import static frc.robot.Constants.ShooterConstants.*;
 
 /*
  * Simulating a rebuilt shooter with the goal of shoot on the fly capabilities 
@@ -47,10 +47,10 @@ public class ShooterSimTest extends SubsystemBase
     LinearAcceleration gravity = MetersPerSecondPerSecond.of(-9.8);
 
     //shooter offset is from center of robot at floot
-    Distance shooterHeight = Meters.of(0.5);
+    Distance shooterHeight = Meters.of(0.37);
     Distance shooterOffsetX = Meters.of(-0.2);
-    Distance shooterOffsetY = Meters.of(0);
-    Transform3d shooterOffset = new Transform3d(shooterOffsetX, shooterOffsetY,shooterHeight, new Rotation3d(0,0,0));
+    Distance shooterOffsetY = Meters.of(-0.1);
+    Transform3d shooterOffset = new Transform3d(shooterOffsetX, shooterOffsetY,shooterHeight, new Rotation3d(shooterRotation));
 
     Time simTimestep = Milliseconds.of(20);
 
@@ -85,6 +85,7 @@ public class ShooterSimTest extends SubsystemBase
     DoublePublisher shotAnglePublisher;
     DoublePublisher hubDistancePublisher;
     StructPublisher<Translation3d> virtualHubPublisher;
+    StructPublisher<Transform3d> shooterPositionPublisher;
 
     
     public ShooterSimTest(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier, Supplier<Translation3d> targetSupplier) 
@@ -100,6 +101,8 @@ public class ShooterSimTest extends SubsystemBase
         shotAnglePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Shooter/angleTarget").publish();
         hubDistancePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Shooter/distanceToHub").publish();
         virtualHubPublisher = NetworkTableInstance.getDefault().getStructTopic("Shooter/virtual hub",Translation3d.struct).publish();
+        shooterPositionPublisher = NetworkTableInstance.getDefault().getStructTopic("Shooter/position",Transform3d.struct).publish();
+        shooterPositionPublisher.set(shooterOffset);
        
        
         //distances to note:
@@ -119,6 +122,7 @@ public class ShooterSimTest extends SubsystemBase
         distance_to_speed.put(5.0,8.13);
         distance_to_speed.put(5.5,8.47);
         distance_to_speed.put(8.0,8.47);
+        
 
         //map distance from goal to shot angle (angles are measured above the horizontal)
         distance_to_azimuth.put(0.0,75.0);
@@ -159,6 +163,7 @@ public class ShooterSimTest extends SubsystemBase
         //intended velocity and azimuth (pitch) from lookup table based on distance
         shotVelocity = MetersPerSecond.of(distance_to_speed.get(targetDistance));
         azimuth = Degrees.of(distance_to_azimuth.get(targetDistance));
+        
 
         double a = 0.5 * gravity.in(MetersPerSecondPerSecond);
         double b = shotVelocity.in(MetersPerSecond)*Math.sin(azimuth.in(Radians));
@@ -196,6 +201,7 @@ public class ShooterSimTest extends SubsystemBase
                     target.getZ()
                 );
 
+            
             robotToVirtualTarget = shooterPose.getTranslation().minus(virtualTarget);
             virtualTargetDistance = Math.sqrt(Math.pow(robotToVirtualTarget.getX(),2) + Math.pow(robotToVirtualTarget.getY(),2));
             virtualShotVelocity = MetersPerSecond.of(distance_to_speed.get(virtualTargetDistance));
@@ -209,7 +215,7 @@ public class ShooterSimTest extends SubsystemBase
 
     public Rotation2d targetYaw()
     {
-        return new Rotation2d(robotToVirtualTarget.getX(), robotToVirtualTarget.getY()).plus(Rotation2d.k180deg);
+        return new Rotation2d(robotToVirtualTarget.getX(), robotToVirtualTarget.getY()).plus(Rotation2d.k180deg).minus(shooterRotation);
     } 
 ;
     public Trigger aimOk()
@@ -247,8 +253,8 @@ public class ShooterSimTest extends SubsystemBase
                 double azimuthSin = Math.sin(virtualAzimuth.in(Radians));
 
                 //yaw is the ground angle of the robot. X part of the shot is cos(yaw), Y part is sin(yaw)
-                double yawCos = Math.cos(robotPose.getRotation().getRadians());
-                double yawSin = Math.sin(robotPose.getRotation().getRadians());
+                double yawCos = Math.cos(shooterPose.getRotation().getZ());
+                double yawSin = Math.sin(shooterPose.getRotation().getZ());
 
                 
                 //robot's drive velocity when shot is taken

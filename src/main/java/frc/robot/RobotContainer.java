@@ -96,20 +96,20 @@ public class RobotContainer
 
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
-        /*drivetrain.setDefaultCommand(
+        drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
                 drive.withVelocityX(-joystick.getY() * MaxSpeed/2) // Drive forward with negative Y (forward)
                     .withVelocityY(-joystick.getX() * MaxSpeed/2) // Drive left with negative X (left)
                     .withRotationalRate(-joystick.getTwist() * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
-        );*/
-        joystick.trigger().whileTrue(drivetrain.autoAlign());
+        );
+        joystick.button(11).whileTrue(drivetrain.autoAlign());
 
-        //joystick.button(2).whileTrue(
-            drivetrain.setDefaultCommand(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw));
-        //);
-        joystick.button(3).and(shooter.aimOk()).and(shooter.fireOk()).onTrue
+        joystick.button(2).whileTrue(
+            drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw)
+        );
+        joystick.trigger().and(shooter.aimOk()).and(shooter.fireOk()).onTrue
         (
             shooter.fire()
         );

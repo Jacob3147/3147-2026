@@ -1,0 +1,109 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.550270252923199,
+        "y": 7.39
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.7104823766721005,
+        "y": 7.380107355894334
+      },
+      "isLocked": false,
+      "linkedName": "Start left trench"
+    },
+    {
+      "anchor": {
+        "x": 5.457073960181696,
+        "y": 7.39
+      },
+      "prevControl": {
+        "x": 5.202279314762075,
+        "y": 7.421284848658259
+      },
+      "nextControl": {
+        "x": 5.952336179944625,
+        "y": 7.3291894458146105
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.3,
+        "y": 6.5
+      },
+      "prevControl": {
+        "x": 7.3,
+        "y": 7.662786603202942
+      },
+      "nextControl": {
+        "x": 7.3,
+        "y": 5.4628652444061565
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.3,
+        "y": 4.925803571431702
+      },
+      "prevControl": {
+        "x": 7.3,
+        "y": 5.493504252088731
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 2,
+      "rotationDegrees": -50.0
+    }
+  ],
+  "constraintZones": [
+    {
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 1.6067796610169498,
+      "maxWaypointRelativePos": 3.0,
+      "constraints": {
+        "maxVelocity": 2.0,
+        "maxAcceleration": 3.0,
+        "maxAngularVelocity": 540.0,
+        "maxAngularAcceleration": 720.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
+    }
+  ],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -50.0
+  },
+  "reversed": false,
+  "folder": "L-Neutral-Depot-Hang",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}
