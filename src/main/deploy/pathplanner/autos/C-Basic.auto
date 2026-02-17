@@ -5,15 +5,15 @@
     "data": {
       "commands": [
         {
-          "type": "wait",
+          "type": "path",
           "data": {
-            "waitTime": 5.0
+            "pathName": "A10"
           }
         },
         {
-          "type": "path",
+          "type": "wait",
           "data": {
-            "pathName": "B10 hub to hang right"
+            "waitTime": 5.0
           }
         }
       ]

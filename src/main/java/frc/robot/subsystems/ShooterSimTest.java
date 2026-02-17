@@ -50,7 +50,7 @@ public class ShooterSimTest extends SubsystemBase
     Distance shooterHeight = Meters.of(0.37);
     Distance shooterOffsetX = Meters.of(-0.2);
     Distance shooterOffsetY = Meters.of(-0.1);
-    Transform3d shooterOffset = new Transform3d(shooterOffsetX, shooterOffsetY,shooterHeight, new Rotation3d(shooterRotation));
+    Transform3d shooterOffset = new Transform3d(shooterOffsetX, shooterOffsetY,shooterHeight, new Rotation3d(SHOOTER_ROTATION));
 
     Time simTimestep = Milliseconds.of(20);
 
@@ -215,7 +215,7 @@ public class ShooterSimTest extends SubsystemBase
 
     public Rotation2d targetYaw()
     {
-        return new Rotation2d(robotToVirtualTarget.getX(), robotToVirtualTarget.getY()).plus(Rotation2d.k180deg).minus(shooterRotation);
+        return new Rotation2d(robotToVirtualTarget.getX(), robotToVirtualTarget.getY()).plus(Rotation2d.k180deg).minus(SHOOTER_ROTATION);
     } 
 ;
     public Trigger aimOk()

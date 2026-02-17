@@ -7,16 +7,19 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.ShooterSimTest;
+import frc.robot.subsystems.Shooter;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
@@ -50,6 +53,7 @@ public class RobotContainer
 
     //joystick and suppliers from joystick
     private final CommandJoystick joystick = new CommandJoystick(OperatorConstants.kDriverControllerPort);
+    private final CommandGenericHID buttonBox = new CommandGenericHID(OperatorConstants.kOperatorControllerPort);
 
     private final Supplier<Double> stickFwdSupplier = () -> {return -joystick.getY()*MaxSpeed/2;};
     private final Supplier<Double> stickLeftSupplier = () -> {return -joystick.getX()*MaxSpeed/2;};
@@ -62,18 +66,18 @@ public class RobotContainer
     private final Supplier<Translation3d> targetSupplier = () -> {return drivetrain.our_hub;};
 
     //shooter and suppliers from shooter
-    private final ShooterSimTest shooter = new ShooterSimTest(poseSupplier, speedsSupplier, targetSupplier);
+    private final Shooter shooter = new Shooter(poseSupplier, speedsSupplier, targetSupplier);
     
     private final Supplier<Rotation2d> shotTargetYaw = () -> {return shooter.targetYaw();};
 
-
-
     private final SendableChooser<Command> autoChooser;
+    
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() 
     {
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
+
         SmartDashboard.putData("Auto Mode", autoChooser);
 
         // Configure the trigger bindings
@@ -88,38 +92,61 @@ public class RobotContainer
      */
     private void configureBindings() 
     {
-        // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-
-
         
-        //joystick.button(8).onTrue(Commands.runOnce(() -> drivetrain.resetAllPoses(new Pose2d(0,0,new Rotation2d(0)))));
-
         // Note that X is defined as forward according to WPILib convention,
         // and Y is defined as to the left according to WPILib convention.
         drivetrain.setDefaultCommand(
             // Drivetrain will execute this command periodically
             drivetrain.applyRequest(() ->
-                drive.withVelocityX(-joystick.getY() * MaxSpeed/2) // Drive forward with negative Y (forward)
-                    .withVelocityY(-joystick.getX() * MaxSpeed/2) // Drive left with negative X (left)
-                    .withRotationalRate(-joystick.getTwist() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+                drive.withVelocityX(-joystick.getY() * MaxSpeed) // Drive forward with negative Y (forward)
+                    .withVelocityY(-joystick.getX() * MaxSpeed) // Drive left with negative X (left)
+                    .withRotationalRate(-joystick.getRawAxis(5) * MaxAngularRate) // Drive counterclockwise with negative X (left)
             )
         );
-        joystick.button(11).whileTrue(drivetrain.autoAlign());
 
-        joystick.button(2).whileTrue(
-            drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw)
-        );
-        joystick.trigger().and(shooter.aimOk()).and(shooter.fireOk()).onTrue
+        
+        //manual shot
+        joystick.button(19).and(shooter.manualModeTrigger).whileTrue
         (
             shooter.fire()
         );
+
+        //auto shot
+        joystick.button(19).and(shooter.manualModeTrigger).negate().whileTrue
+        (
+            drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw).alongWith
+            (
+            shooter.fire()
+            )
+        );
+
+        /*joystick.button(2).whileTrue
+        (
+            intake.run()
+        );*/
     
+        buttonBox.button(9).onTrue(
+            Commands.runOnce(() -> shooter.manualOn())
+        );
+
+        buttonBox.button(8).onTrue(
+            Commands.runOnce(() -> shooter.manualOff())
+        );
+
+        buttonBox.button(2).onTrue(
+            Commands.runOnce(() -> shooter.spinUp())
+        );
+
+        buttonBox.button(2).onTrue(
+            Commands.runOnce(() -> shooter.spinDown())
+        );
+
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        joystick.trigger().and(joystick.button(4)).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        joystick.trigger().and(joystick.button(5)).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        joystick.trigger().and(joystick.button(6)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        joystick.trigger().and(joystick.button(7)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        //joystick.trigger().and(joystick.button(4)).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        //joystick.trigger().and(joystick.button(5)).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        //joystick.trigger().and(joystick.button(6)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        //joystick.trigger().and(joystick.button(7)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
 
         drivetrain.registerTelemetry(logger::telemeterize);

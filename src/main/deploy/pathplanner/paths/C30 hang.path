@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.2598574561403506,
-        "y": 4.823530701754386
+        "x": 2.1801428571428567,
+        "y": 5.654642857142858
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.0290679824561404,
-        "y": 4.275405701754385
+        "x": 1.9493533834586465,
+        "y": 5.106517857142857
       },
       "isLocked": false,
       "linkedName": "Depot shoot"
@@ -48,7 +48,7 @@
   "folder": "L-Depot",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -23.355564859286027
+    "rotation": -33.69006752597973
   },
   "useDefaultConstraints": false
 }

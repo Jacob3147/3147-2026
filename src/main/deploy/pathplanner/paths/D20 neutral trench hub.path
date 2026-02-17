@@ -1,0 +1,95 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.3,
+        "y": 4.925803571431702
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.3467209745251525,
+        "y": 5.618782459294769
+      },
+      "isLocked": false,
+      "linkedName": "depot side midfield"
+    },
+    {
+      "anchor": {
+        "x": 6.446,
+        "y": 7.426
+      },
+      "prevControl": {
+        "x": 7.404274259008232,
+        "y": 7.337544507383871
+      },
+      "nextControl": {
+        "x": 6.197058316149692,
+        "y": 7.448979078349091
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.984757442159376,
+        "y": 7.426
+      },
+      "prevControl": {
+        "x": 3.2340677847476207,
+        "y": 7.407443247090831
+      },
+      "nextControl": {
+        "x": 2.396091180012828,
+        "y": 7.469815809080408
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.903969298245614,
+        "y": 5.9390131578947365
+      },
+      "prevControl": {
+        "x": 1.9857857142825017,
+        "y": 5.913785714286124
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Depot"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 2.0,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -179.2559407971112
+  },
+  "reversed": false,
+  "folder": "L-Neutral",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -50.0
+  },
+  "useDefaultConstraints": true
+}

@@ -15,12 +15,6 @@
           "data": {
             "pathName": "C20 depot to shoot"
           }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C30 hang"
-          }
         }
       ]
     }

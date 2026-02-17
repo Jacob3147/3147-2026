@@ -8,7 +8,7 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0157720699670034,
+        "x": 3.3105644116965287,
         "y": 4.019852939809741
       },
       "isLocked": false,
@@ -16,16 +16,16 @@
     },
     {
       "anchor": {
-        "x": 1.600727026513693,
-        "y": 4.164895056763706
+        "x": 3.5,
+        "y": 4.02
       },
       "prevControl": {
-        "x": 3.012234457358371,
-        "y": 4.164895056763706
+        "x": 3.75,
+        "y": 4.02
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Climb Left"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -45,7 +45,7 @@
     "rotation": 0.0
   },
   "reversed": false,
-  "folder": "C-HangL",
+  "folder": "C-Basic",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0

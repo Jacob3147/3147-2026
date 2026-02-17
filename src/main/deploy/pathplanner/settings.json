@@ -3,15 +3,10 @@
   "robotLength": 0.9,
   "holonomicMode": true,
   "pathFolders": [
-    "C-HangL",
-    "C-HangR",
+    "C-Basic",
     "L-Depot",
-    "L-Depot-Hang",
     "L-Neutral",
-    "L-Neutral-Depot-Hang",
-    "R-HP",
-    "R-HP-Hang",
-    "R-Neutral"
+    "R-HP"
   ],
   "autoFolders": [],
   "defaultMaxVel": 3.0,

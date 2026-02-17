@@ -13,6 +13,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Velocity;
+
 import static edu.wpi.first.units.Units.*;
 import static edu.wpi.first.math.util.Units.*;
 import frc.robot.utility.Autopilot.*;
@@ -30,11 +34,16 @@ public final class Constants
     public static class OperatorConstants 
     {
         public static final int kDriverControllerPort = 0;
+        public static final int kOperatorControllerPort = 0;
     }
 
     public static class ShooterConstants
     {
-        public static final Rotation2d shooterRotation = new Rotation2d(Degrees.of(-15));
+        public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(-15));
+        public static final double MANUAL_AZIMUTH = 0;
+        public static final double MANUAL_VELOCITY = 0;
+
+        public static final double HOOD_MAX_ROTATIONS = 5;
     }
 
     public static class LocalizationConstants

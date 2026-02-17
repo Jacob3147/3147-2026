@@ -6,6 +6,13 @@ import static frc.robot.Constants.AutopilotConstants.*;
 
 import frc.robot.utility.Autopilot.*;
 import frc.robot.utility.Autopilot.Autopilot.APResult;
+import gg.questnav.questnav.PoseFrame;
+import gg.questnav.questnav.QuestNav;
+import limelight.Limelight;
+import limelight.networktables.AngularVelocity3d;
+import limelight.networktables.Orientation3d;
+import limelight.networktables.PoseEstimate;
+import limelight.networktables.LimelightPoseEstimator.EstimationMode;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -86,8 +93,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     
 
-    //QuestNav questNav;
-    //Limelight limelight;
+    QuestNav questNav;
+    Limelight limelight;
 
     Pose3d quest_camera_pose;
     double quest_timestamp;
@@ -104,6 +111,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     double yToSpeaker;
     StructPublisher<Translation3d> our_hub_pub = NetworkTableInstance.getDefault().getStructTopic("Shooter/target",Translation3d.struct).publish();
     DoublePublisher angleError = NetworkTableInstance.getDefault().getDoubleTopic("Shooter/angle error").publish();
+
+
+    DoublePublisher questBatteryPub = NetworkTableInstance.getDefault().getDoubleTopic("Quest/battery").publish();
+    StructPublisher<Pose2d> questPosePub = NetworkTableInstance.getDefault().getStructTopic("Quest/pose",Pose2d.struct).publish();
+    StructPublisher<Pose2d> limelightPosePub = NetworkTableInstance.getDefault().getStructTopic("Limelight/pose", Pose2d.struct).publish();
 
     public Translation3d our_hub = new Translation3d();
     public double our_hub_x;
@@ -311,7 +323,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
         //periodicVisionTasks();
-
+        //"Quest Battery", questNav.getBatteryPercent());
         yToSpeaker = our_hub_y - getState().Pose.getY();
         xToSpeaker = our_hub_x - getState().Pose.getX();
     }
@@ -373,7 +385,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     * 
     * https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
     */
-/*
+
     private void periodicVisionTasks()
     {
         //required to be called constantly for QuestNav
@@ -419,13 +431,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 //add to pose estimator
                 addVisionMeasurement(quest_robot_pose.toPose2d(), quest_timestamp, QUESTNAV_STD_DEVS);
             }
+            questPosePub.set(quest_robot_pose.toPose2d());
         }
 
     }
 
     private void getPoseFromLimelight()
     {
-        Optional<PoseEstimate> visionEstimate = limelightPoseEstimator.getPoseEstimate();
+        Optional<PoseEstimate> visionEstimate = limelight.createPoseEstimator(EstimationMode.MEGATAG2).getPoseEstimate();
         // If the pose is present
         visionEstimate.ifPresent((PoseEstimate poseEstimate) -> {
             // If the average tag distance is less than 4 meters,
@@ -434,27 +447,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (poseEstimate.avgTagDist < 4 && poseEstimate.tagCount > 0 && poseEstimate.getMinTagAmbiguity() < 0.3)
             {
                 addVisionMeasurement(poseEstimate.pose.toPose2d(), poseEstimate.timestampSeconds, LIMELIGHT_STD_DEVS);
+                limelightPosePub.set(poseEstimate.pose.toPose2d());
             }
           });
     }
 
-    */
+    
     public void resetAllPoses(Pose2d pose)
     {
         super.resetPose(pose);  //drivetrain
-        resetQuestPose(pose);   //quest
-        resetLimelightPose(pose);   //LL is absolute only so this should be irrelevant
+        resetQuestPose(pose);   //quest  
+        //LL is absolute only so no resetting to be done
     }
 
 
     private void resetQuestPose(Pose2d pose)
     {
-        //questNav.setPose(new Pose3d(pose).transformBy(ROBOT_TO_QUEST));
-    }
-
-    private void resetLimelightPose(Pose2d pose)
-    {
-
+        questNav.setPose(new Pose3d(pose).transformBy(ROBOT_TO_QUEST));
+        
     }
 
 
