@@ -38,6 +38,7 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
@@ -47,10 +48,13 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
+
 import static frc.robot.Constants.ShooterConstants.*;
 
 /*
@@ -128,10 +132,23 @@ public class Shooter extends SubsystemBase
     VoltageOut indexerRequest = new VoltageOut(0);
 
     
+    //for bringup
+    double shooter_pct = 0;
+    double hood_pct = 0;
+    double indexer_pct = 0;
+    
+    double shooter_kp = 0;
+    double shooter_kd = 0;
+    double shooter_kv = 0;//12 / Constants.KRAKEN_FREE_SPEED; //volt per rps
+
+    VoltageOut shooterTestRequest = new VoltageOut(0);
+    VoltageOut hoodTestRequest = new VoltageOut(0);
+
+
     public Shooter(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier, Supplier<Translation3d> targetSupplier) 
     {
         shooterSlot0.withKS(0)
-                    .withKV(0)
+                    .withKV(shooter_kv)
                     .withKA(0)
                     .withKP(0)
                     .withKI(0)
@@ -213,12 +230,40 @@ public class Shooter extends SubsystemBase
         distance_to_azimuth.put(4.6,60.0);
         distance_to_azimuth.put(8.0,60.0);*/
         
-        
+        SmartDashboard.putNumber("bringup/shooter pct",0);
+        SmartDashboard.putNumber("bringup/hood pct",0);
+        SmartDashboard.putNumber("bringup/indexer pct",0);
+        SmartDashboard.putBoolean("bringup/zero hood", false);
+        SmartDashboard.putNumber("bringup/shooter kp", 0);
+        SmartDashboard.putNumber("bringup/shooter kd", 0);
     }
 
     @Override
     public void periodic() 
     {
+        //bringup
+        if(SmartDashboard.getBoolean("bringup/zero hood", false)) hood.setPosition(0);
+        shooter_pct = SmartDashboard.getNumber("bringup/shooter pct",0);
+        hood_pct = SmartDashboard.getNumber("bringup/hood pct",0);
+        indexer_pct = SmartDashboard.getNumber("bringup/indexer pct",0);
+        shooter_kp = SmartDashboard.getNumber("bringup/shooter kp", 0);
+        shooter_kd = SmartDashboard.getNumber("bringup/shooter kd", 0);
+        shooter_1.setControl(shooterTestRequest);
+        shooterTestRequest.withOutput(shooter_pct * 12);
+
+        hood.setControl(hoodTestRequest);
+        hoodTestRequest.withOutput(hood_pct * 12);
+
+        indexer.setControl(indexerRequest);
+        indexerRequest.withOutput(indexer_pct * 12);
+
+        /*
+        shooter_1.setControl(shooterRequest);
+        shooterSlot0.withKP(shooter_kp).withKD(shooter_kd);
+        shooter_1.getConfigurator().apply(shooterConfig);
+        shooterRequest.withVelocity(shooter_pct);*/
+
+
         //calculate this continuously so we can tell the drivetrain what yaw to target
 
         //positions of robot and hub

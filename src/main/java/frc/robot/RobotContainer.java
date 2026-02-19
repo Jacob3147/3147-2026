@@ -7,6 +7,7 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Shooter;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -67,6 +68,8 @@ public class RobotContainer
 
     //shooter and suppliers from shooter
     private final Shooter shooter = new Shooter(poseSupplier, speedsSupplier, targetSupplier);
+
+    private final Intake intake = new Intake();
     
     private final Supplier<Rotation2d> shotTargetYaw = () -> {return shooter.targetYaw();};
 

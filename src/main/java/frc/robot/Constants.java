@@ -31,6 +31,7 @@ import frc.robot.utility.Autopilot.*;
  */
 public final class Constants 
 {
+    public static final int KRAKEN_FREE_SPEED = 5784 / 60;
     public static class OperatorConstants 
     {
         public static final int kDriverControllerPort = 0;
