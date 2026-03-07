@@ -21,6 +21,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.hardware.TalonFXS;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix6.signals.MotorArrangementValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.Nat;
@@ -78,7 +79,7 @@ public class Shooter extends SubsystemBase
     InterpolatingDoubleTreeMap distance_to_speed = new InterpolatingDoubleTreeMap();
     InterpolatingDoubleTreeMap distance_to_azimuth = new InterpolatingDoubleTreeMap();
     
-    boolean manualMode = false;
+    boolean manualMode = true;
     public Trigger manualModeTrigger = new Trigger(() -> manualMode);
     boolean spinUp = false;
 
@@ -102,8 +103,8 @@ public class Shooter extends SubsystemBase
     DoublePublisher shotAngleActPub = NetworkTableInstance.getDefault().getDoubleTopic("Shooter/angleActual").publish();
     DoublePublisher hubDistancePub = NetworkTableInstance.getDefault().getDoubleTopic("Shooter/distanceToHub").publish();
 
-    TalonFX shooter_1 = new TalonFX(40);
-    TalonFX shooter_2 = new TalonFX(41);
+    TalonFX shooter_1 = new TalonFX(20);
+    TalonFX shooter_2 = new TalonFX(21);
     TalonFXConfiguration shooterConfig = new TalonFXConfiguration();
     Slot0Configs shooterSlot0 = shooterConfig.Slot0;
     CurrentLimitsConfigs shooterCurrentLimits = shooterConfig.CurrentLimits;
@@ -113,7 +114,7 @@ public class Shooter extends SubsystemBase
     MotionMagicVelocityVoltage shooterRequest = new MotionMagicVelocityVoltage(0);
 
 
-    TalonFXS hood = new TalonFXS(42);
+    TalonFXS hood = new TalonFXS(24);
     TalonFXSConfiguration hoodConfig = new TalonFXSConfiguration();
     Slot0Configs hoodSlot0 = hoodConfig.Slot0;
     CurrentLimitsConfigs hoodCurrentLimits = hoodConfig.CurrentLimits;
@@ -123,7 +124,7 @@ public class Shooter extends SubsystemBase
     MotionMagicVoltage hoodRequest = new MotionMagicVoltage(0);
 
 
-    TalonFXS indexer = new TalonFXS(30);
+    TalonFXS indexer = new TalonFXS(22);
     TalonFXSConfiguration indexerConfig = new TalonFXSConfiguration();
     Slot0Configs indexerSlot0 = indexerConfig.Slot0;
     CurrentLimitsConfigs indexerCurrentLimits = indexerConfig.CurrentLimits;
@@ -144,6 +145,8 @@ public class Shooter extends SubsystemBase
     VoltageOut shooterTestRequest = new VoltageOut(0);
     VoltageOut hoodTestRequest = new VoltageOut(0);
 
+    double shooterVoltage = 0;
+    boolean shot_override = false;
 
     public Shooter(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier, Supplier<Translation3d> targetSupplier) 
     {
@@ -153,10 +156,10 @@ public class Shooter extends SubsystemBase
                     .withKP(0)
                     .withKI(0)
                     .withKD(0);
-        shooterCurrentLimits.StatorCurrentLimit = 60;
+        shooterCurrentLimits.StatorCurrentLimit = 100;
         shooterMotionConfigs.MotionMagicAcceleration = 100;
         shooterOutputConfig.NeutralMode = NeutralModeValue.Coast;
-        shooterOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
+        shooterOutputConfig.Inverted = InvertedValue.Clockwise_Positive;
         shooter_1.getConfigurator().apply(shooterConfig);
         shooter_2.getConfigurator().apply(shooterConfig);
         shooter_1.setControl(shooterRequest);
@@ -183,9 +186,10 @@ public class Shooter extends SubsystemBase
                  .withKP(0)
                  .withKI(0)
                  .withKD(0);
-        indexerCurrentLimits.StatorCurrentLimit = 20;
+        indexerCurrentLimits.StatorCurrentLimit = 60;
         indexerOutputConfig.NeutralMode = NeutralModeValue.Coast;
         indexerOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
+        indexerConfig.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         indexer.getConfigurator().apply(indexerConfig);
         indexer.setControl(indexerRequest);
         
@@ -231,11 +235,12 @@ public class Shooter extends SubsystemBase
         distance_to_azimuth.put(8.0,60.0);*/
         
         SmartDashboard.putNumber("bringup/shooter pct",0);
-        SmartDashboard.putNumber("bringup/hood pct",0);
-        SmartDashboard.putNumber("bringup/indexer pct",0);
-        SmartDashboard.putBoolean("bringup/zero hood", false);
-        SmartDashboard.putNumber("bringup/shooter kp", 0);
-        SmartDashboard.putNumber("bringup/shooter kd", 0);
+        SmartDashboard.putBoolean("bringup/override shooter", false);
+       // SmartDashboard.putNumber("bringup/hood pct",0);
+        //SmartDashboard.putNumber("bringup/indexer pct",0);
+        //SmartDashboard.putBoolean("bringup/zero hood", false);
+        //SmartDashboard.putNumber("bringup/shooter kp", 0);
+        //SmartDashboard.putNumber("bringup/shooter kd", 0);
     }
 
     @Override
@@ -244,18 +249,18 @@ public class Shooter extends SubsystemBase
         //bringup
         if(SmartDashboard.getBoolean("bringup/zero hood", false)) hood.setPosition(0);
         shooter_pct = SmartDashboard.getNumber("bringup/shooter pct",0);
-        hood_pct = SmartDashboard.getNumber("bringup/hood pct",0);
-        indexer_pct = SmartDashboard.getNumber("bringup/indexer pct",0);
-        shooter_kp = SmartDashboard.getNumber("bringup/shooter kp", 0);
-        shooter_kd = SmartDashboard.getNumber("bringup/shooter kd", 0);
+        shot_override = SmartDashboard.getBoolean("bringup/override shooter", false);
+        //hood_pct = SmartDashboard.getNumber("bringup/hood pct",0);
+        //indexer_pct = SmartDashboard.getNumber("bringup/indexer pct",0);
+        //shooter_kp = SmartDashboard.getNumber("bringup/shooter kp", 0);
+        //shooter_kd = SmartDashboard.getNumber("bringup/shooter kd", 0);
         shooter_1.setControl(shooterTestRequest);
-        shooterTestRequest.withOutput(shooter_pct * 12);
+        
 
-        hood.setControl(hoodTestRequest);
-        hoodTestRequest.withOutput(hood_pct * 12);
+        //hood.setControl(hoodTestRequest);
+        //hoodTestRequest.withOutput(hood_pct * 12);
 
         indexer.setControl(indexerRequest);
-        indexerRequest.withOutput(indexer_pct * 12);
 
         /*
         shooter_1.setControl(shooterRequest);
@@ -295,8 +300,26 @@ public class Shooter extends SubsystemBase
 
         shotVelTargetPub.set(shotVelocity);
         shotVelActPub.set(shooter_1.getVelocity(true).getValueAsDouble());
-        shotAngleTargetPub.set(azimuth);
-        shotAngleActPub.set(hood.getPosition(true).getValueAsDouble());
+        //shotAngleTargetPub.set(azimuth);
+        //shotAngleActPub.set(hood.getPosition(true).getValueAsDouble());
+
+        if(shot_override)
+        {
+            shooterVoltage = shooter_pct;
+        }
+        else
+        {
+            shooterVoltage = 8;
+        }
+        
+        if(spinUp)
+        {
+            shooterTestRequest.withOutput(shooterVoltage);
+        }
+        else
+        {
+            shooterTestRequest.withOutput(0);
+        }
     }
 
     public void shooterControl(double rpm_target)
@@ -310,14 +333,26 @@ public class Shooter extends SubsystemBase
         hoodRequest.withPosition(rotations_target);
     }
 
-    public void runIndexer()
+    public Command indexer()
     {
-        indexerRequest.withOutput(3);
+        return Commands.startEnd(
+        () -> {
+            indexerRequest.withOutput(3);
+        },
+        () -> {
+            indexerRequest.withOutput(0);
+        },
+        this
+        );
     }
-    public void stopIndexer()
-    {
-        indexerRequest.withOutput(0);
-    }
+
+    public void spinUp() { spinUp = true;}
+    public void spinDown() { spinUp = false; }
+    
+
+    public Trigger safeTofire = new Trigger(() -> shooter_1.getVelocity(true).getValueAsDouble() > 50);
+
+
 
     public Rotation2d targetYaw()
     {
@@ -334,31 +369,10 @@ public class Shooter extends SubsystemBase
     }
 
     
-    public void manualOn()
-    {
-        manualMode = true;
-    }
-    public void manualOff()
-    {
-        manualMode = false;
-    }
-
-    public void spinUp()
-    {
-        spinUp = true;
-    }
-    public void spinDown()
-    {
-        spinUp = false;
-    }
 
 
-    public Command fire()
-    {
-        return Commands.startEnd
-        (
-            () -> {runIndexer();},
-            () -> {stopIndexer();}
-        );
-    }
+    
+
+
+
 }

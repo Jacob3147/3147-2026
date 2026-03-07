@@ -4,8 +4,12 @@
 
 package frc.robot;
 
+import java.util.Optional;
+
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -51,10 +55,16 @@ public class Robot extends TimedRobot {
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() 
+  {
+    
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() 
+  {
+    SmartDashboard.putBoolean("hub active", true);
+  }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
@@ -69,7 +79,10 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() 
+  {
+    SmartDashboard.putBoolean("hub active", true);
+  }
 
   @Override
   public void teleopInit() {
@@ -80,11 +93,89 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    
   }
+
+  double matchTime;
+  String gameData;
+  boolean redFirstShift;
+  boolean hubActive;
+  boolean WeFirstShift;
+  double remainingShiftTime;
+  Optional<Alliance> alliance;
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() 
+  {
+    alliance = DriverStation.getAlliance();
+    matchTime = DriverStation.getMatchTime();
+    gameData = DriverStation.getGameSpecificMessage();
+    
+    if(gameData.isEmpty() || alliance.isEmpty())
+    {
+      hubActive = true;
+    }
+    else
+    {
+      if(gameData.charAt(0) == 'R')
+      {
+        redFirstShift = false;
+      } 
+      else 
+      {
+        redFirstShift = true;
+      }
+
+      if((alliance.get() == Alliance.Red && redFirstShift) || (alliance.get() == Alliance.Blue && !redFirstShift))
+      {
+        WeFirstShift = true;
+      }
+      else
+      {
+        WeFirstShift = false;
+      }
+
+
+      if (matchTime > 130) {
+        // Transition shift, hub is active.
+        remainingShiftTime = matchTime - 130;
+        hubActive = true;
+      } 
+      else if (matchTime > 105) 
+      {
+        // Shift 1
+        remainingShiftTime = matchTime - 105;
+        hubActive = WeFirstShift;
+      } 
+      else if (matchTime > 80) 
+      {
+        // Shift 2
+        remainingShiftTime = matchTime - 80;
+        hubActive = !WeFirstShift;
+      } 
+      else if (matchTime > 55) 
+      {
+        // Shift 3
+        remainingShiftTime = matchTime - 55;
+        hubActive = WeFirstShift;
+      } 
+      else if (matchTime > 30) 
+      {
+        // Shift 4
+        remainingShiftTime = matchTime - 30;
+        hubActive = !WeFirstShift;
+      } 
+      else 
+      {
+        // End game, hub always active.
+        remainingShiftTime = matchTime;
+        hubActive = true;
+      }
+    }
+    SmartDashboard.putNumber("shift timer", remainingShiftTime);
+    SmartDashboard.putBoolean("hub active", hubActive);
+  }
 
   @Override
   public void testInit() {

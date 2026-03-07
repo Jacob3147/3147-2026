@@ -10,9 +10,11 @@ import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 import limelight.Limelight;
 import limelight.networktables.AngularVelocity3d;
+import limelight.networktables.LimelightPoseEstimator;
 import limelight.networktables.Orientation3d;
 import limelight.networktables.PoseEstimate;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import limelight.networktables.LimelightSettings.LEDMode;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -103,7 +105,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     Pose3d limelight_camera_pose;
     double limelight_timestamp;
     Pose3d limelight_robot_pose;
-    //LimelightPoseEstimator limelightPoseEstimator;
+    LimelightPoseEstimator limelightPoseEstimator;
 
     Rotation2d angleToSpeaker;
     
@@ -160,15 +162,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             startSimThread();
         }
-        /*
+        
         questNav = new QuestNav();
         limelight = new Limelight("limelight");
         limelight.getSettings()
                  .withLimelightLEDMode(LEDMode.ForceOff)
                  .withCameraOffset(ROBOT_TO_LIMELIGHT)
                  .save();
-        limelightPoseEstimator = limelight.getPoseEstimator(true);
-        */
+        limelightPoseEstimator = limelight.createPoseEstimator(EstimationMode.MEGATAG2);
+        
         configureAutoBuilder();
 
         
@@ -436,9 +438,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     }
 
+    Optional<PoseEstimate> visionEstimate;
     private void getPoseFromLimelight()
     {
-        Optional<PoseEstimate> visionEstimate = limelight.createPoseEstimator(EstimationMode.MEGATAG2).getPoseEstimate();
+        visionEstimate = limelightPoseEstimator.getPoseEstimate();
         // If the pose is present
         visionEstimate.ifPresent((PoseEstimate poseEstimate) -> {
             // If the average tag distance is less than 4 meters,

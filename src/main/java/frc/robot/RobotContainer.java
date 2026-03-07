@@ -54,7 +54,7 @@ public class RobotContainer
 
     //joystick and suppliers from joystick
     private final CommandJoystick joystick = new CommandJoystick(OperatorConstants.kDriverControllerPort);
-    private final CommandGenericHID buttonBox = new CommandGenericHID(OperatorConstants.kOperatorControllerPort);
+    private final CommandGenericHID buttonBox = new CommandGenericHID(1);
 
     private final Supplier<Double> stickFwdSupplier = () -> {return -joystick.getY()*MaxSpeed/2;};
     private final Supplier<Double> stickLeftSupplier = () -> {return -joystick.getX()*MaxSpeed/2;};
@@ -108,41 +108,32 @@ public class RobotContainer
         );
 
         
-        //manual shot
-        joystick.button(19).and(shooter.manualModeTrigger).whileTrue
-        (
-            shooter.fire()
-        );
 
+        /*
         //auto shot
         joystick.button(19).and(shooter.manualModeTrigger).negate().whileTrue
         (
             drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw).alongWith
             (
-            shooter.fire()
+            shooter.indexer()
             )
-        );
-
-        /*joystick.button(2).whileTrue
-        (
-            intake.run()
         );*/
     
-        buttonBox.button(9).onTrue(
-            Commands.runOnce(() -> shooter.manualOn())
-        );
+        buttonBox.button(10).or(joystick.button(2)).whileTrue(intake.spin());
 
-        buttonBox.button(8).onTrue(
-            Commands.runOnce(() -> shooter.manualOff())
-        );
+        buttonBox.button(9).onTrue(intake.deploy());
 
-        buttonBox.button(2).onTrue(
-            Commands.runOnce(() -> shooter.spinUp())
-        );
+        buttonBox.button(1).whileTrue(intake.turbo());
 
-        buttonBox.button(2).onTrue(
-            Commands.runOnce(() -> shooter.spinDown())
-        );
+        buttonBox.button(2).whileTrue(intake.jog());
+        
+        buttonBox.button(3).whileTrue(intake.reverse());
+
+        (buttonBox.button(6).or(joystick.button(19))).and(shooter.safeTofire).whileTrue(shooter.indexer());
+
+        buttonBox.button(7).onTrue(Commands.runOnce(() -> shooter.spinUp()));
+
+        buttonBox.button(8).onTrue(Commands.runOnce(() -> shooter.spinDown()));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -151,6 +142,16 @@ public class RobotContainer
         //joystick.trigger().and(joystick.button(6)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         //joystick.trigger().and(joystick.button(7)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
+        joystick.button(7).or(joystick.button(8)).onTrue(
+                drivetrain.runOnce(
+                    () -> drivetrain.seedFieldCentric()
+                )
+                .andThen(
+                    Commands.runOnce(
+                        () -> drivetrain.resetPose(new Pose2d(0, 0, new Rotation2d(Math.toRadians(180))))
+                    )
+                )
+            );
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

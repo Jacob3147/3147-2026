@@ -11,6 +11,7 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.controls.StrictFollower;
 
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -18,23 +19,35 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 
 public class Intake extends SubsystemBase
 {   
-    double tilt_ratio = 20;
+    double tilt_ratio = 9;
 
 
-    TalonFX tilt = new TalonFX(20);
-    TalonFXConfiguration tiltConfig = new TalonFXConfiguration();
-    Slot0Configs tiltSlot0 = tiltConfig.Slot0;
-    CurrentLimitsConfigs tiltCurrentLimits = tiltConfig.CurrentLimits;
-    MotionMagicConfigs tiltMotionConfigs = tiltConfig.MotionMagic;
-    MotorOutputConfigs tiltOutputConfig = tiltConfig.MotorOutput;
-    FeedbackConfigs tiltFeedbackConfigs = tiltConfig.Feedback;
+    TalonFX tilt_left = new TalonFX(52);
+    TalonFXConfiguration tilt_leftConfig = new TalonFXConfiguration();
+    Slot0Configs tilt_leftSlot0 = tilt_leftConfig.Slot0;
+    CurrentLimitsConfigs tilt_leftCurrentLimits = tilt_leftConfig.CurrentLimits;
+    MotionMagicConfigs tilt_leftMotionConfigs = tilt_leftConfig.MotionMagic;
+    MotorOutputConfigs tilt_leftOutputConfig = tilt_leftConfig.MotorOutput;
+    FeedbackConfigs tilt_leftFeedbackConfigs = tilt_leftConfig.Feedback;
+
+    TalonFX tilt_right = new TalonFX(51);
+    TalonFXConfiguration tilt_rightConfig = new TalonFXConfiguration();
+    Slot0Configs tilt_rightSlot0 = tilt_rightConfig.Slot0;
+    CurrentLimitsConfigs tilt_rightCurrentLimits = tilt_rightConfig.CurrentLimits;
+    MotionMagicConfigs tilt_rightMotionConfigs = tilt_rightConfig.MotionMagic;
+    MotorOutputConfigs tilt_rightOutputConfig = tilt_rightConfig.MotorOutput;
+    FeedbackConfigs tilt_rightFeedbackConfigs = tilt_rightConfig.Feedback;
+
+    
 
     MotionMagicExpoVoltage tiltRequest = new MotionMagicExpoVoltage(0);
+    VoltageOut tiltJogRequest = new VoltageOut(0.5);
 
-    TalonFX wheels = new TalonFX(21);
+    TalonFX wheels = new TalonFX(50);
     TalonFXConfiguration wheelsConfig = new TalonFXConfiguration();
     Slot0Configs wheelsSlot0 = wheelsConfig.Slot0;
     CurrentLimitsConfigs wheelsCurrentLimits = wheelsConfig.CurrentLimits;
@@ -43,34 +56,45 @@ public class Intake extends SubsystemBase
     VoltageOut wheelsRequest = new VoltageOut(0);
 
     DoublePublisher tiltAnglePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Intake/Tilt angle").publish();
-    //bringup
-    double wheels_pct = 0;
-    double tilt_pct = 0;
 
-    double tilt_sp = 0;
+
+    double tilt_sp = 3;
     double tilt_kp = 0;
     double tilt_kd = 0;
-    double tilt_kv = 0;//12 / (Constants.KRAKEN_FREE_SPEED / tilt_ratio); //volt per (rps of end effector)
+    double tilt_kv = 12 / (Constants.KRAKEN_FREE_SPEED / tilt_ratio); //volt per (rps of end effector)
 
-    VoltageOut tiltRequestTest = new VoltageOut(0);
-
+    boolean deploy = false;
     
     public Intake()
     {
-         tiltSlot0.withKS(0)
-                 .withKV(0)
+         tilt_leftSlot0.withKS(0)
+                 .withKV(tilt_kv)
                  .withKA(0)
                  .withKP(0)
                  .withKI(0)
                  .withKD(0);
         
-        tiltCurrentLimits.StatorCurrentLimit = 20;
-        tiltMotionConfigs.MotionMagicAcceleration = 100;
-        tiltOutputConfig.NeutralMode = NeutralModeValue.Coast;
-        tiltFeedbackConfigs.SensorToMechanismRatio = tilt_ratio;
-        tiltOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
-        tilt.getConfigurator().apply(tiltConfig);
-        tilt.setControl(tiltRequest);
+        tilt_leftCurrentLimits.StatorCurrentLimit = 60;
+        tilt_leftMotionConfigs.MotionMagicAcceleration = 50;
+        tilt_leftOutputConfig.NeutralMode = NeutralModeValue.Coast;
+        tilt_leftFeedbackConfigs.SensorToMechanismRatio = tilt_ratio;
+        tilt_leftOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
+        tilt_left.getConfigurator().apply(tilt_leftConfig);
+        tilt_left.setControl(tiltRequest);
+
+        tilt_rightSlot0.withKS(0)
+                 .withKV(tilt_kv)
+                 .withKA(0)
+                 .withKP(0)
+                 .withKI(0)
+                 .withKD(0);
+        
+        tilt_rightCurrentLimits.StatorCurrentLimit = 60;
+        tilt_rightMotionConfigs.MotionMagicAcceleration = 50;
+        tilt_rightOutputConfig.NeutralMode = NeutralModeValue.Coast;
+        tilt_rightFeedbackConfigs.SensorToMechanismRatio = tilt_ratio;
+        tilt_rightOutputConfig.Inverted = InvertedValue.Clockwise_Positive;
+        tilt_right.getConfigurator().apply(tilt_rightConfig);
 
         wheelsSlot0.withKS(0)
                  .withKV(0)
@@ -78,7 +102,7 @@ public class Intake extends SubsystemBase
                  .withKP(0)
                  .withKI(0)
                  .withKD(0);
-        wheelsCurrentLimits.StatorCurrentLimit = 20;
+        wheelsCurrentLimits.StatorCurrentLimit = 100;
         wheelsOutputConfig.NeutralMode = NeutralModeValue.Coast;
         wheelsOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
         wheels.getConfigurator().apply(wheelsConfig);
@@ -94,39 +118,84 @@ public class Intake extends SubsystemBase
     @Override
     public void periodic() 
     {   
-        //bringup
-        if(SmartDashboard.getBoolean("bringup/zero intake", false)) tilt.setPosition(0);
-        tilt_pct = SmartDashboard.getNumber("bringup/tilt pct", 0);
-        wheels_pct = SmartDashboard.getNumber("bringup/wheels pct", 0);
-        tilt_kp = SmartDashboard.getNumber("bringup/tilt kp", 0);
-        tilt_kd = SmartDashboard.getNumber("bringup/tilt kd", 0);
-        tilt.setControl(tiltRequestTest);
-        tiltRequestTest.withOutput(tilt_pct * 12);
+        if(SmartDashboard.getBoolean("bringup/zero intake", false))
+        {
+            tilt_left.setPosition(0);
+            tilt_right.setPosition(0);
+        }
+        tilt_left.setControl(tiltRequest);
+        tilt_right.setControl(tiltRequest);
 
         wheels.setControl(wheelsRequest);
-        wheelsRequest.withOutput(wheels_pct * 12);
         
-        /*
-        tilt.setControl(tiltRequest);
-        tiltSlot0.withKP(tilt_kp).withKD(tilt_kd);
-        tilt.getConfigurator().apply(tiltConfig);
-        tiltRequest.withPosition(tilt_pct);*/
+        if(deploy)
+        {
+            tiltRequest.withPosition(tilt_sp);
+        }
+        else
+        {
+            tiltRequest.withPosition(0);
+        }
 
-
-
-
-        tiltAnglePublisher.set(tilt.getPosition(true).getValueAsDouble());
+        tiltAnglePublisher.set(tilt_left.getPosition(true).getValueAsDouble());
     }
     public Command deploy()
     {
+        return Commands.runOnce(() -> {deploy = true;});
+    }
+
+    public Command jog()
+    {
+        return Commands.startEnd(
+            () -> {
+                tilt_left.setControl(tiltJogRequest);
+                tilt_right.setControl(tiltJogRequest);
+            },
+            () -> {
+                tilt_left.setControl(tiltRequest);
+                tilt_right.setControl(tiltRequest);
+            },
+            this
+        );
+    }
+
+    public Command spin()
+    {
         return Commands.startEnd(
         () -> {
-
+            wheelsRequest.withOutput(3);
         },
         () -> {
-            
+            wheelsRequest.withOutput(0);
         },
         this
         );
     }
+
+    public Command reverse()
+    {
+        return Commands.startEnd(
+        () -> {
+            wheelsRequest.withOutput(-3);
+        },
+        () -> {
+            wheelsRequest.withOutput(0);
+        },
+        this
+        );
+    }
+
+    public Command turbo()
+    {
+        return Commands.startEnd(
+        () -> {
+            wheelsRequest.withOutput(12);
+        },
+        () -> {
+            wheelsRequest.withOutput(0);
+        },
+        this
+        );
+    }
+
 }
