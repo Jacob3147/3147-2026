@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.1801428571428567,
-        "y": 5.654642857142858
+        "x": 3.1535897435897438,
+        "y": 3.970398860398861
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.5808749999999998,
-        "y": 5.444089285714287
+        "x": 2.554321886446887,
+        "y": 3.75984528897029
       },
       "isLocked": false,
       "linkedName": "Depot shoot"
@@ -47,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.2559407971112
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "L-Neutral",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -33.69006752597973
+    "rotation": 40.0
   },
   "useDefaultConstraints": true
 }

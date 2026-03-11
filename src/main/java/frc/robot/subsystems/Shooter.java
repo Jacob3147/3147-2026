@@ -156,7 +156,7 @@ public class Shooter extends SubsystemBase
                     .withKP(0)
                     .withKI(0)
                     .withKD(0);
-        shooterCurrentLimits.StatorCurrentLimit = 100;
+        shooterCurrentLimits.StatorCurrentLimit = 60;
         shooterMotionConfigs.MotionMagicAcceleration = 100;
         shooterOutputConfig.NeutralMode = NeutralModeValue.Coast;
         shooterOutputConfig.Inverted = InvertedValue.Clockwise_Positive;
@@ -309,7 +309,7 @@ public class Shooter extends SubsystemBase
         }
         else
         {
-            shooterVoltage = 8;
+            shooterVoltage = 7.02;
         }
         
         if(spinUp)
@@ -337,7 +337,7 @@ public class Shooter extends SubsystemBase
     {
         return Commands.startEnd(
         () -> {
-            indexerRequest.withOutput(3);
+            indexerRequest.withOutput(4.5);
         },
         () -> {
             indexerRequest.withOutput(0);
@@ -350,7 +350,7 @@ public class Shooter extends SubsystemBase
     public void spinDown() { spinUp = false; }
     
 
-    public Trigger safeTofire = new Trigger(() -> shooter_1.getVelocity(true).getValueAsDouble() > 50);
+    public Trigger safeTofire = new Trigger(() -> shooter_1.getVelocity(true).getValueAsDouble() > 40);
 
 
 

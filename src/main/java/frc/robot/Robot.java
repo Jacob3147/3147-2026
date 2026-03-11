@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Shooter;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -51,19 +52,24 @@ public class Robot extends TimedRobot {
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+        m_robotContainer.teleopInit = false;
+
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
   public void disabledInit() 
   {
-    
+        m_robotContainer.teleopInit = false;
+
   }
 
   @Override
   public void disabledPeriodic() 
   {
     SmartDashboard.putBoolean("hub active", true);
+        m_robotContainer.teleopInit = false;
+
   }
 
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
@@ -75,6 +81,8 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.schedule();
     }
+        m_robotContainer.teleopInit = false;
+
   }
 
   /** This function is called periodically during autonomous. */
@@ -82,6 +90,7 @@ public class Robot extends TimedRobot {
   public void autonomousPeriodic() 
   {
     SmartDashboard.putBoolean("hub active", true);
+    m_robotContainer.teleopInit = false;
   }
 
   @Override
@@ -93,6 +102,7 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    m_robotContainer.teleopInit = true;
     
   }
 
@@ -108,6 +118,8 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() 
   {
+        m_robotContainer.teleopInit = false;
+
     alliance = DriverStation.getAlliance();
     matchTime = DriverStation.getMatchTime();
     gameData = DriverStation.getGameSpecificMessage();

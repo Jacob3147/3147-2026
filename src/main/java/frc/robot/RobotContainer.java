@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
-
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 import static edu.wpi.first.units.Units.*;
@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.FollowPathCommand;
 
 /**
@@ -46,7 +47,7 @@ public class RobotContainer
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
 
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
-            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+            .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.05) // Add a deadband
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
@@ -79,6 +80,10 @@ public class RobotContainer
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() 
     {
+        NamedCommands.registerCommand("Run intake", intake.spin().repeatedly().until(cancelCommands));
+        NamedCommands.registerCommand("Deploy intake", intake.deploy());
+        NamedCommands.registerCommand("Spin up", Commands.runOnce(() ->shooter.spinUp()));
+        NamedCommands.registerCommand("Shoot",shooter.indexer().repeatedly().until(cancelCommands));
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
 
         SmartDashboard.putData("Auto Mode", autoChooser);
@@ -88,6 +93,15 @@ public class RobotContainer
 
         // Warmup PathPlanner to avoid Java pauses
         FollowPathCommand.warmupCommand().schedule();
+    }
+
+    public boolean teleopInit = false;
+    public Trigger cancelCommands = new Trigger(() -> teleopInit);
+    //runs at teleop init. delete it maybe?
+    public void cancelCommands()
+    {
+        intake.getCurrentCommand().cancel();
+        shooter.getCurrentCommand().cancel();
     }
 
     /**
@@ -118,8 +132,10 @@ public class RobotContainer
             shooter.indexer()
             )
         );*/
+
+        joystick.button(5).whileTrue(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw));
     
-        buttonBox.button(10).or(joystick.button(2)).whileTrue(intake.spin());
+        buttonBox.button(10).or(joystick.button(1).or(joystick.button(2))).whileTrue(intake.spin());
 
         buttonBox.button(9).onTrue(intake.deploy());
 
@@ -129,7 +145,7 @@ public class RobotContainer
         
         buttonBox.button(3).whileTrue(intake.reverse());
 
-        (buttonBox.button(6).or(joystick.button(19))).and(shooter.safeTofire).whileTrue(shooter.indexer());
+        (buttonBox.button(6).or(joystick.button(24))).and(shooter.safeTofire).whileTrue(shooter.indexer());
 
         buttonBox.button(7).onTrue(Commands.runOnce(() -> shooter.spinUp()));
 
@@ -142,7 +158,7 @@ public class RobotContainer
         //joystick.trigger().and(joystick.button(6)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
         //joystick.trigger().and(joystick.button(7)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
-        joystick.button(7).or(joystick.button(8)).onTrue(
+        joystick.button(3).or(joystick.button(4)).onTrue(
                 drivetrain.runOnce(
                     () -> drivetrain.seedFieldCentric()
                 )

@@ -4,12 +4,12 @@
     {
       "anchor": {
         "x": 3.558048245614035,
-        "y": 6.054407894736841
+        "y": 5.939
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5194956140350877,
-        "y": 6.0736403508771915
+        "x": 2.519317551002218,
+        "y": 5.939
       },
       "isLocked": false,
       "linkedName": "Start Left"
@@ -20,8 +20,8 @@
         "y": 5.9390131578947365
       },
       "prevControl": {
-        "x": 1.7213486842105263,
-        "y": 6.025559210526316
+        "x": 1.7259692982456136,
+        "y": 5.9390131578947365
       },
       "nextControl": null,
       "isLocked": false,
@@ -56,7 +56,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.2559407971112
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": "L-Depot",

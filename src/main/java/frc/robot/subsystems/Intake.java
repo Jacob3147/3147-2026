@@ -102,7 +102,7 @@ public class Intake extends SubsystemBase
                  .withKP(0)
                  .withKI(0)
                  .withKD(0);
-        wheelsCurrentLimits.StatorCurrentLimit = 100;
+        wheelsCurrentLimits.StatorCurrentLimit = 80;
         wheelsOutputConfig.NeutralMode = NeutralModeValue.Coast;
         wheelsOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
         wheels.getConfigurator().apply(wheelsConfig);
@@ -163,7 +163,7 @@ public class Intake extends SubsystemBase
     {
         return Commands.startEnd(
         () -> {
-            wheelsRequest.withOutput(3);
+            wheelsRequest.withOutput(5);
         },
         () -> {
             wheelsRequest.withOutput(0);

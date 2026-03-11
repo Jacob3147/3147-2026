@@ -35,12 +35,12 @@ public final class Constants
     public static class OperatorConstants 
     {
         public static final int kDriverControllerPort = 0;
-        public static final int kOperatorControllerPort = 0;
+        public static final int kOperatorControllerPort = 1;
     }
 
     public static class ShooterConstants
     {
-        public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(-15));
+        public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(45));
         public static final double MANUAL_AZIMUTH = 0;
         public static final double MANUAL_VELOCITY = 0;
 

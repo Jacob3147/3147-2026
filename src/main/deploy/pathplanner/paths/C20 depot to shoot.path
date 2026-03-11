@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 2.1801428571428567,
-        "y": 5.654642857142858
+        "x": 3.1535897435897438,
+        "y": 3.970398860398861
       },
       "prevControl": {
-        "x": 1.765866316448346,
-        "y": 5.985322155821245
+        "x": 2.7393132028952327,
+        "y": 4.301078159077248
       },
       "nextControl": null,
       "isLocked": false,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -33.69006752597973
+    "rotation": 40.0
   },
   "reversed": false,
   "folder": "L-Depot",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -179.2559407971112
+    "rotation": 180.0
   },
   "useDefaultConstraints": false
 }

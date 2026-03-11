@@ -94,7 +94,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
     
-
+    /*
     QuestNav questNav;
     Limelight limelight;
 
@@ -106,7 +106,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     double limelight_timestamp;
     Pose3d limelight_robot_pose;
     LimelightPoseEstimator limelightPoseEstimator;
-
+    */
     Rotation2d angleToSpeaker;
     
     double xToSpeaker;
@@ -162,7 +162,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             startSimThread();
         }
-        
+        /*
         questNav = new QuestNav();
         limelight = new Limelight("limelight");
         limelight.getSettings()
@@ -170,7 +170,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                  .withCameraOffset(ROBOT_TO_LIMELIGHT)
                  .save();
         limelightPoseEstimator = limelight.createPoseEstimator(EstimationMode.MEGATAG2);
-        
+        */
         configureAutoBuilder();
 
         
@@ -242,7 +242,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             //var config = RobotConfig.fromGUISettings();
             RobotConfig config = new RobotConfig
                                 (
-                                    Pounds.of(150), //find exact later - this is approx max weight plus bumper and battery
+                                    Pounds.of(110), //find exact later - this is approx max weight plus bumper and battery
                                     MomentOfInertia.ofBaseUnits(6, KilogramSquareMeters),   //find exact later
                                     new ModuleConfig
                                     (
@@ -335,7 +335,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this.setControl(m_aimRequest
                 .withVelocityX(xStickSupplier.get())
                 .withVelocityY(yStickSupplier.get())
-                .withTargetDirection(yawTargetSupplier.get().plus(getOperatorForwardDirection())));  
+                .withTargetDirection(Rotation2d.fromDegrees(50)/*yawTargetSupplier.get().plus(getOperatorForwardDirection())*/));  
                 //this is annoying - since i'm letting driver control X/Y I still have that flipped by operator perspective
                 //instead of global blue alliance origins. but rotation is flipped 180 when on red, but not in pose...
                 //getoperatorforwarddirection returns a rotation2d of 180 on red, 0 on blue
@@ -387,7 +387,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     * 
     * https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
     */
-
+      /*
     private void periodicVisionTasks()
     {
         //required to be called constantly for QuestNav
@@ -454,22 +454,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
           });
     }
-
+*/
     
     public void resetAllPoses(Pose2d pose)
     {
         super.resetPose(pose);  //drivetrain
-        resetQuestPose(pose);   //quest  
+        //resetQuestPose(pose);   //quest  
         //LL is absolute only so no resetting to be done
     }
-
+/*
 
     private void resetQuestPose(Pose2d pose)
     {
         questNav.setPose(new Pose3d(pose).transformBy(ROBOT_TO_QUEST));
         
     }
-
+*/
 
     /**
      * Adds a vision measurement to the Kalman Filter. This will correct the odometry pose estimate
