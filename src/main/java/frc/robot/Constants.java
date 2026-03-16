@@ -40,7 +40,7 @@ public final class Constants
 
     public static class ShooterConstants
     {
-        public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(45));
+        public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(50));
         public static final double MANUAL_AZIMUTH = 0;
         public static final double MANUAL_VELOCITY = 0;
 

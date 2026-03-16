@@ -7,13 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "C10 L start to depot"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "C20 depot to shoot"
+            "pathName": "5 FEET"
           }
         }
       ]

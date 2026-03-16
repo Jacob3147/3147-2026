@@ -112,6 +112,7 @@ public class Shooter extends SubsystemBase
     MotorOutputConfigs shooterOutputConfig = shooterConfig.MotorOutput;
 
     MotionMagicVelocityVoltage shooterRequest = new MotionMagicVelocityVoltage(0);
+    
 
 
     TalonFXS hood = new TalonFXS(24);
@@ -140,11 +141,14 @@ public class Shooter extends SubsystemBase
     
     double shooter_kp = 0;
     double shooter_kd = 0;
-    double shooter_kv = 0;//12 / Constants.KRAKEN_FREE_SPEED; //volt per rps
+    double shooter_kv = 12 / Constants.KRAKEN_FREE_SPEED;
 
-    VoltageOut shooterTestRequest = new VoltageOut(0);
+    VoltageOut shooterRequest2 = new VoltageOut(0);
+
+    double shooter_rps_target = 53;
+
     VoltageOut hoodTestRequest = new VoltageOut(0);
-
+    double manualVoltage;
     double shooterVoltage = 0;
     boolean shot_override = false;
 
@@ -162,7 +166,8 @@ public class Shooter extends SubsystemBase
         shooterOutputConfig.Inverted = InvertedValue.Clockwise_Positive;
         shooter_1.getConfigurator().apply(shooterConfig);
         shooter_2.getConfigurator().apply(shooterConfig);
-        shooter_1.setControl(shooterRequest);
+        shooterRequest.withAcceleration(500);
+        shooter_1.setControl(shooterRequest2);
         shooter_2.setControl(new StrictFollower(shooter_1.getDeviceID()));
 
 
@@ -176,6 +181,7 @@ public class Shooter extends SubsystemBase
         hoodMotionConfigs.MotionMagicAcceleration = 100;
         hoodOutputConfig.NeutralMode = NeutralModeValue.Coast;
         hoodOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
+        hoodConfig.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         hood.getConfigurator().apply(hoodConfig);
         hood.setControl(hoodRequest);
 
@@ -236,37 +242,20 @@ public class Shooter extends SubsystemBase
         
         SmartDashboard.putNumber("bringup/shooter pct",0);
         SmartDashboard.putBoolean("bringup/override shooter", false);
-       // SmartDashboard.putNumber("bringup/hood pct",0);
-        //SmartDashboard.putNumber("bringup/indexer pct",0);
-        //SmartDashboard.putBoolean("bringup/zero hood", false);
-        //SmartDashboard.putNumber("bringup/shooter kp", 0);
-        //SmartDashboard.putNumber("bringup/shooter kd", 0);
+        SmartDashboard.putBoolean("bringup/zero hood", false);
     }
 
     @Override
     public void periodic() 
     {
+        manualVoltage = SmartDashboard.getNumber("bringup/shooter pct", 0);
+        SmartDashboard.putNumber("bringup/hood angle", hood.getPosition(true).getValueAsDouble());
         //bringup
         if(SmartDashboard.getBoolean("bringup/zero hood", false)) hood.setPosition(0);
-        shooter_pct = SmartDashboard.getNumber("bringup/shooter pct",0);
-        shot_override = SmartDashboard.getBoolean("bringup/override shooter", false);
-        //hood_pct = SmartDashboard.getNumber("bringup/hood pct",0);
-        //indexer_pct = SmartDashboard.getNumber("bringup/indexer pct",0);
-        //shooter_kp = SmartDashboard.getNumber("bringup/shooter kp", 0);
-        //shooter_kd = SmartDashboard.getNumber("bringup/shooter kd", 0);
-        shooter_1.setControl(shooterTestRequest);
-        
 
-        //hood.setControl(hoodTestRequest);
-        //hoodTestRequest.withOutput(hood_pct * 12);
-
+        shooter_1.setControl(shooterRequest2);
+        hood.setControl(hoodRequest);
         indexer.setControl(indexerRequest);
-
-        /*
-        shooter_1.setControl(shooterRequest);
-        shooterSlot0.withKP(shooter_kp).withKD(shooter_kd);
-        shooter_1.getConfigurator().apply(shooterConfig);
-        shooterRequest.withVelocity(shooter_pct);*/
 
 
         //calculate this continuously so we can tell the drivetrain what yaw to target
@@ -283,7 +272,7 @@ public class Shooter extends SubsystemBase
 
         //distance from shooter to target
         targetDistance = Math.sqrt(Math.pow(robotToTarget.getX(),2) + Math.pow(robotToTarget.getY(),2));
-        
+        SmartDashboard.putNumber("target distance", targetDistance);
         //intended velocity and azimuth (pitch) from lookup table based on distance
         if(!manualMode)
         {
@@ -300,32 +289,20 @@ public class Shooter extends SubsystemBase
 
         shotVelTargetPub.set(shotVelocity);
         shotVelActPub.set(shooter_1.getVelocity(true).getValueAsDouble());
-        //shotAngleTargetPub.set(azimuth);
-        //shotAngleActPub.set(hood.getPosition(true).getValueAsDouble());
+        shotAngleTargetPub.set(azimuth);
+        shotAngleActPub.set(hood.getPosition(true).getValueAsDouble());
 
-        if(shot_override)
-        {
-            shooterVoltage = shooter_pct;
-        }
-        else
-        {
-            shooterVoltage = 7.02;
-        }
         
         if(spinUp)
         {
-            shooterTestRequest.withOutput(shooterVoltage);
+            shooterRequest2.withOutput(manualVoltage);
         }
         else
         {
-            shooterTestRequest.withOutput(0);
+            shooterRequest2.withOutput(0);
         }
     }
 
-    public void shooterControl(double rpm_target)
-    {
-        shooterRequest.withVelocity(rpm_target/60);
-    }
 
     public void hoodControl(double rotations_target)
     {
@@ -356,7 +333,7 @@ public class Shooter extends SubsystemBase
 
     public Rotation2d targetYaw()
     {
-        return new Rotation2d(robotToTarget.getX(), robotToTarget.getY()).plus(Rotation2d.k180deg).minus(SHOOTER_ROTATION);
+        return new Rotation2d(robotToTarget.getX(), robotToTarget.getY()).plus(SHOOTER_ROTATION);
     } 
 
     public Trigger aimOk()

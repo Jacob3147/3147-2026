@@ -108,11 +108,7 @@ public class Intake extends SubsystemBase
         wheels.getConfigurator().apply(wheelsConfig);
         wheels.setControl(wheelsRequest);
 
-        SmartDashboard.putNumber("bringup/tilt pct", 0);
-        SmartDashboard.putNumber("bringup/wheels pct", 0);
         SmartDashboard.putBoolean("bringup/zero intake", false);
-        SmartDashboard.putNumber("bringup/tilt kp", 0);
-        SmartDashboard.putNumber("bringup/tilt kd", 0);
     }    
 
     @Override

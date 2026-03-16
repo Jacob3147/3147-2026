@@ -335,7 +335,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this.setControl(m_aimRequest
                 .withVelocityX(xStickSupplier.get())
                 .withVelocityY(yStickSupplier.get())
-                .withTargetDirection(Rotation2d.fromDegrees(50)/*yawTargetSupplier.get().plus(getOperatorForwardDirection())*/));  
+                .withTargetDirection(yawTargetSupplier.get().plus(Rotation2d.k180deg).plus(getOperatorForwardDirection())));  
                 //this is annoying - since i'm letting driver control X/Y I still have that flipped by operator perspective
                 //instead of global blue alliance origins. but rotation is flipped 180 when on red, but not in pose...
                 //getoperatorforwarddirection returns a rotation2d of 180 on red, 0 on blue
@@ -462,6 +462,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         //resetQuestPose(pose);   //quest  
         //LL is absolute only so no resetting to be done
     }
+
+    
+    public void resetPose() 
+    {
+        super.resetPose(new Pose2d(getState().Pose.getX(), 
+                                   getState().Pose.getY(), 
+                                   getOperatorForwardDirection()));
+    }
+   
 /*
 
     private void resetQuestPose(Pose2d pose)
