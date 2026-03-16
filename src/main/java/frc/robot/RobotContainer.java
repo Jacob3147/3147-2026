@@ -80,8 +80,7 @@ public class RobotContainer
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() 
     {
-        NamedCommands.registerCommand("Run intake", intake.spin().repeatedly().until(cancelCommands));
-        NamedCommands.registerCommand("Deploy intake", intake.deploy());
+        NamedCommands.registerCommand("Intake", intake.spin());
         NamedCommands.registerCommand("Spin up", Commands.runOnce(() ->shooter.spinUp()));
         NamedCommands.registerCommand("Shoot",shooter.indexer().repeatedly().until(cancelCommands));
         autoChooser = AutoBuilder.buildAutoChooser("Tests");
@@ -123,51 +122,38 @@ public class RobotContainer
 
         
 
-        /*
-        //auto shot
-        joystick.button(19).and(shooter.manualModeTrigger).negate().whileTrue
-        (
-            drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw).alongWith
-            (
-            shooter.indexer()
-            )
-        );*/
-
-        joystick.button(5).whileTrue(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw));
-    
-        buttonBox.button(10).or(joystick.button(1).or(joystick.button(2))).whileTrue(intake.spin());
-
-        buttonBox.button(9).onTrue(intake.deploy());
-
-        buttonBox.button(1).whileTrue(intake.turbo());
-
-        buttonBox.button(2).whileTrue(intake.jog());
         
-        buttonBox.button(3).whileTrue(intake.reverse());
+       
 
-        (buttonBox.button(6).or(joystick.button(24))).and(shooter.safeTofire).whileTrue(shooter.indexer());
+        
+        
+        buttonBox.button(9).onTrue(intake.deploy());
+        buttonBox.button(10).onTrue(intake.retract());
 
         buttonBox.button(7).onTrue(Commands.runOnce(() -> shooter.spinUp()));
-
         buttonBox.button(8).onTrue(Commands.runOnce(() -> shooter.spinDown()));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        //joystick.trigger().and(joystick.button(4)).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        //joystick.trigger().and(joystick.button(5)).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        //joystick.trigger().and(joystick.button(6)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        //joystick.trigger().and(joystick.button(7)).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        buttonBox.button(5).onTrue(Commands.runOnce(() -> shooter.autoShooter()));
+        buttonBox.button(6).onTrue(Commands.runOnce(() -> shooter.manualShooter()));        
 
+
+        joystick.button(1).or(joystick.button(2)).whileTrue(intake.spin());
+        
         joystick.button(3).or(joystick.button(4)).onTrue(
-                drivetrain.runOnce(
-                    () -> drivetrain.seedFieldCentric()
+            drivetrain.runOnce(
+                () -> drivetrain.seedFieldCentric()
+            )
+            .andThen(
+                Commands.runOnce(
+                    () -> drivetrain.resetPose(new Pose2d(3.568, 4.035, new Rotation2d(0)))
                 )
-                .andThen(
-                    Commands.runOnce(
-                        () -> drivetrain.resetPose(new Pose2d(3.568, 4.035, new Rotation2d(0)))
-                    )
-                )
-            );
+            )
+        );
+
+        joystick.button(5).whileTrue(drivetrain.aim(stickFwdSupplier, stickLeftSupplier, shotTargetYaw));
+
+        joystick.button(24).and(shooter.safeTofire).whileTrue(shooter.indexer().alongWith(intake.pulse()));
+
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }

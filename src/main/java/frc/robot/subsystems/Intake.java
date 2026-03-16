@@ -58,7 +58,9 @@ public class Intake extends SubsystemBase
     DoublePublisher tiltAnglePublisher = NetworkTableInstance.getDefault().getDoubleTopic("Intake/Tilt angle").publish();
 
 
-    double tilt_sp = 3;
+    double intake_deployed_pos = 3;
+
+
     double tilt_kp = 0;
     double tilt_kd = 0;
     double tilt_kv = 12 / (Constants.KRAKEN_FREE_SPEED / tilt_ratio); //volt per (rps of end effector)
@@ -126,7 +128,7 @@ public class Intake extends SubsystemBase
         
         if(deploy)
         {
-            tiltRequest.withPosition(tilt_sp);
+            tiltRequest.withPosition(intake_deployed_pos);
         }
         else
         {
@@ -135,38 +137,60 @@ public class Intake extends SubsystemBase
 
         tiltAnglePublisher.set(tilt_left.getPosition(true).getValueAsDouble());
     }
+
+
     public Command deploy()
     {
         return Commands.runOnce(() -> {deploy = true;});
     }
 
-    public Command jog()
+    public Command retract()
     {
-        return Commands.startEnd(
-            () -> {
-                tilt_left.setControl(tiltJogRequest);
-                tilt_right.setControl(tiltJogRequest);
-            },
-            () -> {
-                tilt_left.setControl(tiltRequest);
-                tilt_right.setControl(tiltRequest);
-            },
-            this
-        );
+        return Commands.runOnce(() -> {deploy = false;});
     }
 
+
+    boolean deployPrev;
     public Command spin()
     {
         return Commands.startEnd(
         () -> {
+            deployPrev = deploy;
+            deploy = true;
             wheelsRequest.withOutput(5);
         },
         () -> {
+            deploy = deployPrev;
             wheelsRequest.withOutput(0);
         },
         this
         );
     }
+
+
+    public Command pulse()
+    {
+        
+        return Commands.repeatingSequence
+        (
+            
+            Commands.runOnce(() -> 
+            {
+                deploy = false;
+            }),
+            Commands.waitSeconds(1),
+            Commands.runOnce(() ->
+            {
+                deploy = true;
+            })
+        ).andThen
+        (
+            Commands.runOnce(() -> {deploy = deployPrev;})
+        );
+    }
+
+
+
 
     public Command reverse()
     {

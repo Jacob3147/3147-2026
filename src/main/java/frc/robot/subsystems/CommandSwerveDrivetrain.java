@@ -94,19 +94,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
     
-    /*
-    QuestNav questNav;
+    
+    //QuestNav questNav;
     Limelight limelight;
 
-    Pose3d quest_camera_pose;
-    double quest_timestamp;
-    Pose3d quest_robot_pose;
+    //Pose3d quest_camera_pose;
+    //double quest_timestamp;
+    //Pose3d quest_robot_pose;
 
     Pose3d limelight_camera_pose;
     double limelight_timestamp;
     Pose3d limelight_robot_pose;
     LimelightPoseEstimator limelightPoseEstimator;
-    */
+    Optional<PoseEstimate> visionEstimate;
     Rotation2d angleToSpeaker;
     
     double xToSpeaker;
@@ -162,87 +162,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             startSimThread();
         }
-        /*
-        questNav = new QuestNav();
+        
+        //questNav = new QuestNav();
         limelight = new Limelight("limelight");
         limelight.getSettings()
-                 .withLimelightLEDMode(LEDMode.ForceOff)
-                 .withCameraOffset(ROBOT_TO_LIMELIGHT)
+                 .withLimelightLEDMode(LEDMode.PipelineControl)
+                 //.withCameraOffset(ROBOT_TO_LIMELIGHT)
                  .save();
         limelightPoseEstimator = limelight.createPoseEstimator(EstimationMode.MEGATAG2);
-        */
+        
         configureAutoBuilder();
 
         
     }
 
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants        Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency    The frequency to run the odometry loop. If
-     *                                   unspecified or set to 0 Hz, this is 250 Hz on
-     *                                   CAN FD, and 100 Hz on CAN 2.0.
-     * @param modules                    Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
-        if (Utils.isSimulation()) {
-            startSimThread();
-        }
-        configureAutoBuilder();
-    }
-
-    /**
-     * Constructs a CTRE SwerveDrivetrain using the specified constants.
-     * <p>
-     * This constructs the underlying hardware devices, so users should not construct
-     * the devices themselves. If they need the devices, they can access them through
-     * getters in the classes.
-     *
-     * @param drivetrainConstants        Drivetrain-wide constants for the swerve drive
-     * @param odometryUpdateFrequency    The frequency to run the odometry loop. If
-     *                                   unspecified or set to 0 Hz, this is 250 Hz on
-     *                                   CAN FD, and 100 Hz on CAN 2.0.
-     * @param odometryStandardDeviation  The standard deviation for odometry calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param visionStandardDeviation   The standard deviation for vision calculation
-     *                                  in the form [x, y, theta]ᵀ, with units in meters
-     *                                  and radians
-     * @param modules                    Constants for each specific module
-     */
-    public CommandSwerveDrivetrain(
-        SwerveDrivetrainConstants drivetrainConstants,
-        double odometryUpdateFrequency,
-        Matrix<N3, N1> odometryStandardDeviation,
-        Matrix<N3, N1> visionStandardDeviation,
-        SwerveModuleConstants<?, ?, ?>... modules
-    ) 
-    {
-        super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation, modules);
-        if (Utils.isSimulation()) 
-        {
-            startSimThread();
-        }
-        configureAutoBuilder();
-    }
-
+ 
     private void configureAutoBuilder() 
     {
         try {
             //var config = RobotConfig.fromGUISettings();
             RobotConfig config = new RobotConfig
                                 (
-                                    Pounds.of(110), //find exact later - this is approx max weight plus bumper and battery
+                                    Pounds.of(115), //find exact later - this is approx max weight plus bumper and battery
                                     MomentOfInertia.ofBaseUnits(6, KilogramSquareMeters),   //find exact later
                                     new ModuleConfig
                                     (
@@ -324,7 +265,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             });
         }
 
-        //periodicVisionTasks();
+        periodicVisionTasks();
         //"Quest Battery", questNav.getBatteryPercent());
         yToSpeaker = our_hub_y - getState().Pose.getY();
         xToSpeaker = our_hub_x - getState().Pose.getX();
@@ -387,11 +328,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     * 
     * https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
     */
-      /*
+      
     private void periodicVisionTasks()
     {
         //required to be called constantly for QuestNav
-        questNav.commandPeriodic(); 
+        //questNav.commandPeriodic(); 
         
         //required to be called constantly for LimeLight
         limelight.getSettings()
@@ -406,13 +347,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     )
                 )
                  .save();
+        
+
+        if(DriverStation.isDisabled())
+        {
+            limelight.getNTTable().getEntry("throttle_set").setNumber(200);
+        }
+        else
+        {
+            limelight.getNTTable().getEntry("throttle_set").setNumber(0);
+        }
 
 
-        getPoseFromQuestNav();
+        //getPoseFromQuestNav();
         getPoseFromLimelight();
     }
 
-    
+    /*
     private void getPoseFromQuestNav()
     {
         if(questNav.isTracking())
@@ -437,8 +388,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
 
     }
+    */
 
-    Optional<PoseEstimate> visionEstimate;
+    
     private void getPoseFromLimelight()
     {
         visionEstimate = limelightPoseEstimator.getPoseEstimate();
@@ -454,7 +406,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
           });
     }
-*/
+
     
     public void resetAllPoses(Pose2d pose)
     {

@@ -63,8 +63,8 @@ import static frc.robot.Constants.ShooterConstants.*;
  */
 public class Shooter extends SubsystemBase 
 {
-    double shotVelocity;
-    double azimuth;
+    double rps_target;
+    double hood_target;
 
     //shooter offset is from center of robot at floot
     Distance shooterHeight = Meters.of(0.37);
@@ -76,8 +76,8 @@ public class Shooter extends SubsystemBase
 
     //tried in vain to get an algebraic solution for shot speed and especially shot angle - turns out the answer is either empirical or use numerical methods instead of algebraic.
     //this lets you put as many ordered pairs as you want and then it will give a linear interpolation between them for any input
-    InterpolatingDoubleTreeMap distance_to_speed = new InterpolatingDoubleTreeMap();
-    InterpolatingDoubleTreeMap distance_to_azimuth = new InterpolatingDoubleTreeMap();
+    InterpolatingDoubleTreeMap distance_to_rps = new InterpolatingDoubleTreeMap();
+    InterpolatingDoubleTreeMap distance_to_hood = new InterpolatingDoubleTreeMap();
     
     boolean manualMode = true;
     public Trigger manualModeTrigger = new Trigger(() -> manualMode);
@@ -111,7 +111,8 @@ public class Shooter extends SubsystemBase
     MotionMagicConfigs shooterMotionConfigs = shooterConfig.MotionMagic;
     MotorOutputConfigs shooterOutputConfig = shooterConfig.MotorOutput;
 
-    MotionMagicVelocityVoltage shooterRequest = new MotionMagicVelocityVoltage(0);
+
+    MotionMagicVelocityVoltage shooterRequest = new MotionMagicVelocityVoltage(0).withSlot(0);
     
 
 
@@ -124,6 +125,11 @@ public class Shooter extends SubsystemBase
 
     MotionMagicVoltage hoodRequest = new MotionMagicVoltage(0);
 
+    double hood_kv = 12.0 / (Constants.MINION_FREE_SPEED / hood_ratio);
+    double hood_ks = 0;
+    double hood_kp = 0;
+    double hood_kd = 0;
+
 
     TalonFXS indexer = new TalonFXS(22);
     TalonFXSConfiguration indexerConfig = new TalonFXSConfiguration();
@@ -134,23 +140,17 @@ public class Shooter extends SubsystemBase
     VoltageOut indexerRequest = new VoltageOut(0);
 
     
-    //for bringup
-    double shooter_pct = 0;
-    double hood_pct = 0;
-    double indexer_pct = 0;
-    
     double shooter_kp = 0;
     double shooter_kd = 0;
-    double shooter_kv = 12 / Constants.KRAKEN_FREE_SPEED;
+    double shooter_kv = 12.0 / Constants.KRAKEN_FREE_SPEED;
 
-    VoltageOut shooterRequest2 = new VoltageOut(0);
+    //VoltageOut shooterRequest2 = new VoltageOut(0);
 
     double shooter_rps_target = 53;
 
-    VoltageOut hoodTestRequest = new VoltageOut(0);
-    double manualVoltage;
+
+    double manualVoltage = 0;
     double shooterVoltage = 0;
-    boolean shot_override = false;
 
     public Shooter(Supplier<Pose2d> poseSupplier, Supplier<ChassisSpeeds> speedsSupplier, Supplier<Translation3d> targetSupplier) 
     {
@@ -167,16 +167,16 @@ public class Shooter extends SubsystemBase
         shooter_1.getConfigurator().apply(shooterConfig);
         shooter_2.getConfigurator().apply(shooterConfig);
         shooterRequest.withAcceleration(500);
-        shooter_1.setControl(shooterRequest2);
+        shooter_1.setControl(shooterRequest);
         shooter_2.setControl(new StrictFollower(shooter_1.getDeviceID()));
 
 
-        hoodSlot0.withKS(0)
-                 .withKV(0)
+        hoodSlot0.withKS(hood_ks)
+                 .withKV(hood_kv)
                  .withKA(0)
-                 .withKP(0)
+                 .withKP(hood_kp)
                  .withKI(0)
-                 .withKD(0);
+                 .withKD(hood_kd);
         hoodCurrentLimits.StatorCurrentLimit = 20;
         hoodMotionConfigs.MotionMagicAcceleration = 100;
         hoodOutputConfig.NeutralMode = NeutralModeValue.Coast;
@@ -213,32 +213,30 @@ public class Shooter extends SubsystemBase
         //5.5 is about the longest shot I could see
 
         //map distance from goal to shot speed
-        /*distance_to_speed.put(0.0,6.0);
-        distance_to_speed.put(1.375,6.0);
-        distance_to_speed.put(1.5,6.01);
-        distance_to_speed.put(2.0,6.38);
-        distance_to_speed.put(2.5,6.75);
-        distance_to_speed.put(3.0,7.12);
-        distance_to_speed.put(3.5,7.3);
-        distance_to_speed.put(4.0,7.44);
-        distance_to_speed.put(4.5,7.78);
-        distance_to_speed.put(5.0,8.13);
-        distance_to_speed.put(5.5,8.47);
-        distance_to_speed.put(8.0,8.47);
+        distance_to_rps.put(0.0,58.0);
+        distance_to_rps.put(1.5,58.0);
+        distance_to_rps.put(2.0,58.0);
+        distance_to_rps.put(2.4,58.0);
+        distance_to_rps.put(2.81,60.0);
+        distance_to_rps.put(3.24,63.0);
+        distance_to_rps.put(3.77,65.0);
+        distance_to_rps.put(4.23,67.0);
+        distance_to_rps.put(5.16,74.0);
+        distance_to_rps.put(7.0,74.0);
 
         
 
-        //map distance from goal to shot angle (angles are measured above the horizontal)
-        distance_to_azimuth.put(0.0,75.0);
-        distance_to_azimuth.put(1.375,75.0);
-        distance_to_azimuth.put(1.5,74.38); 
-        distance_to_azimuth.put(2.0,71.50);
-        distance_to_azimuth.put(2.5, 68.17);
-        distance_to_azimuth.put(3.0,65.90);
-        distance_to_azimuth.put(3.5,62.76);
-        distance_to_azimuth.put(4.0,61.17);
-        distance_to_azimuth.put(4.6,60.0);
-        distance_to_azimuth.put(8.0,60.0);*/
+        //map distance from goal to hood rotations
+        distance_to_rps.put(0.0,0.0);
+        distance_to_rps.put(1.5,0.0);
+        distance_to_rps.put(2.0,0.0);
+        distance_to_rps.put(2.4,3.0);
+        distance_to_rps.put(2.81,4.5);
+        distance_to_rps.put(3.24,6.0);
+        distance_to_rps.put(3.77,7.88);
+        distance_to_rps.put(4.23,8.8);
+        distance_to_rps.put(5.16,10.88);
+        distance_to_rps.put(7.0,10.88);
         
         SmartDashboard.putNumber("bringup/shooter pct",0);
         SmartDashboard.putBoolean("bringup/override shooter", false);
@@ -253,7 +251,7 @@ public class Shooter extends SubsystemBase
         //bringup
         if(SmartDashboard.getBoolean("bringup/zero hood", false)) hood.setPosition(0);
 
-        shooter_1.setControl(shooterRequest2);
+        shooter_1.setControl(shooterRequest);
         hood.setControl(hoodRequest);
         indexer.setControl(indexerRequest);
 
@@ -273,41 +271,38 @@ public class Shooter extends SubsystemBase
         //distance from shooter to target
         targetDistance = Math.sqrt(Math.pow(robotToTarget.getX(),2) + Math.pow(robotToTarget.getY(),2));
         SmartDashboard.putNumber("target distance", targetDistance);
-        //intended velocity and azimuth (pitch) from lookup table based on distance
+
+        //intended velocity and hood_target (pitch) from lookup table based on distance
         if(!manualMode)
         {
-            //shotVelocity = distance_to_speed.get(targetDistance);
-            //azimuth = distance_to_azimuth.get(targetDistance);
-            azimuth = MANUAL_AZIMUTH;
-            shotVelocity = MANUAL_VELOCITY;
+            hood_target = distance_to_hood.get(targetDistance);
+            rps_target = distance_to_rps.get(targetDistance);
+            
         }
         else
         {
-            azimuth = MANUAL_AZIMUTH;
-            shotVelocity = MANUAL_VELOCITY;
+            hood_target = 0;
+            rps_target = manualVoltage;
         }
 
-        shotVelTargetPub.set(shotVelocity);
+        shotVelTargetPub.set(rps_target);
         shotVelActPub.set(shooter_1.getVelocity(true).getValueAsDouble());
-        shotAngleTargetPub.set(azimuth);
+        shotAngleTargetPub.set(hood_target);
         shotAngleActPub.set(hood.getPosition(true).getValueAsDouble());
 
         
         if(spinUp)
         {
-            shooterRequest2.withOutput(manualVoltage);
+            shooterRequest.withVelocity(rps_target);
+            hoodRequest.withPosition(hood_target);
+            //shooterRequest2.withOutput(rps_target);
         }
         else
         {
-            shooterRequest2.withOutput(0);
+            shooterRequest.withVelocity(0);
+            hoodRequest.withPosition(0);
+            //shooterRequest2.withOutput(0);
         }
-    }
-
-
-    public void hoodControl(double rotations_target)
-    {
-        if(rotations_target > HOOD_MAX_ROTATIONS) rotations_target = HOOD_MAX_ROTATIONS;
-        hoodRequest.withPosition(rotations_target);
     }
 
     public Command indexer()
@@ -325,6 +320,9 @@ public class Shooter extends SubsystemBase
 
     public void spinUp() { spinUp = true;}
     public void spinDown() { spinUp = false; }
+
+    public void manualShooter() { manualMode = true;}
+    public void autoShooter() { manualMode = false; }
     
 
     public Trigger safeTofire = new Trigger(() -> shooter_1.getVelocity(true).getValueAsDouble() > 40);

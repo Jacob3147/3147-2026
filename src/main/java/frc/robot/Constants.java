@@ -31,7 +31,8 @@ import frc.robot.utility.Autopilot.*;
  */
 public final class Constants 
 {
-    public static final int KRAKEN_FREE_SPEED = 5784 / 60;
+    public static final double MINION_FREE_SPEED = 7700 / 60;
+    public static final double KRAKEN_FREE_SPEED = 5784 / 60;
     public static class OperatorConstants 
     {
         public static final int kDriverControllerPort = 0;
@@ -41,10 +42,9 @@ public final class Constants
     public static class ShooterConstants
     {
         public static final Rotation2d SHOOTER_ROTATION = new Rotation2d(Degrees.of(50));
-        public static final double MANUAL_AZIMUTH = 0;
-        public static final double MANUAL_VELOCITY = 0;
 
-        public static final double HOOD_MAX_ROTATIONS = 5;
+        public static final double HOOD_MAX_ROTATIONS = 15;
+        public static final double hood_ratio = 261;
     }
 
     public static class LocalizationConstants
@@ -83,8 +83,8 @@ public final class Constants
         );
 
         public static final Matrix<N3, N1> LIMELIGHT_STD_DEVS = VecBuilder.fill(
-            0.2,   //trust pose to 20cm in X and Y (subject to change or may be dynamic)
-            0.2,
+            0.10,   //trust pose to 10cm in X and Y (subject to change or may be dynamic)
+            0.10,
             degreesToRadians(999)   //ignore rotation
         );
 

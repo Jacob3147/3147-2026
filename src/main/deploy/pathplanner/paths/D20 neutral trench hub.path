@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.3,
-        "y": 4.925803571431702
+        "x": 8.221410714285714,
+        "y": 4.974392857142857
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.3467209745251525,
-        "y": 5.618782459294769
+        "x": 7.976266235252315,
+        "y": 5.850589728142572
       },
       "isLocked": false,
       "linkedName": "depot side midfield"
@@ -20,12 +20,12 @@
         "y": 7.426
       },
       "prevControl": {
-        "x": 7.404274259008232,
-        "y": 7.337544507383871
+        "x": 7.561139317942859,
+        "y": 7.351933772784076
       },
       "nextControl": {
-        "x": 6.197058316149692,
-        "y": 7.448979078349091
+        "x": 6.196549614516999,
+        "y": 7.442568197922002
       },
       "isLocked": false,
       "linkedName": null
@@ -36,28 +36,28 @@
         "y": 7.426
       },
       "prevControl": {
-        "x": 3.2340677847476207,
-        "y": 7.407443247090831
+        "x": 3.234753771074753,
+        "y": 7.424645183099239
       },
       "nextControl": {
-        "x": 2.396091180012828,
-        "y": 7.469815809080408
+        "x": 2.4779914990561984,
+        "y": 7.42874634058598
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.903969298245614,
-        "y": 5.9390131578947365
+        "x": 2.892785714285714,
+        "y": 5.589857142857142
       },
       "prevControl": {
-        "x": 1.9857857142825024,
-        "y": 5.913785714286124
+        "x": 2.0710929571437138,
+        "y": 6.644746182873857
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Depot"
+      "linkedName": null
     }
   ],
   "rotationTargets": [
@@ -83,13 +83,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 0.0
   },
   "reversed": false,
   "folder": "L-Neutral",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -50.0
+    "rotation": -130.0
   },
   "useDefaultConstraints": true
 }
