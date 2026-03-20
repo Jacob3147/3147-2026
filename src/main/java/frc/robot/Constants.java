@@ -85,7 +85,7 @@ public final class Constants
         public static final Matrix<N3, N1> LIMELIGHT_STD_DEVS = VecBuilder.fill(
             0.10,   //trust pose to 10cm in X and Y (subject to change or may be dynamic)
             0.10,
-            degreesToRadians(999)   //ignore rotation
+            degreesToRadians(9999999)   //ignore rotation
         );
 
         public static final double blue_hub_x = 4.625;

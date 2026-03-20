@@ -36,6 +36,7 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -169,7 +170,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                  .withLimelightLEDMode(LEDMode.PipelineControl)
                  //.withCameraOffset(ROBOT_TO_LIMELIGHT)
                  .save();
-        limelightPoseEstimator = limelight.createPoseEstimator(EstimationMode.MEGATAG2);
+        limelightPoseEstimator = limelight.createPoseEstimator(EstimationMode.MEGATAG1);
         
         configureAutoBuilder();
 
@@ -328,25 +329,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     * 
     * https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html
     */
-      
+ 
+    double[] MT2_gyroSet = new double[6];
     private void periodicVisionTasks()
     {
         //required to be called constantly for QuestNav
         //questNav.commandPeriodic(); 
-        
+        //TODO FIX
         //required to be called constantly for LimeLight
-        limelight.getSettings()
-                 .withRobotOrientation(
-                    new Orientation3d(
-                        getPigeon2().getRotation3d(),
-                        new AngularVelocity3d(
-                            getPigeon2().getAngularVelocityXWorld(true).getValue(),
-                            getPigeon2().getAngularVelocityYWorld(true).getValue(),
-                            getPigeon2().getAngularVelocityZWorld(true).getValue()
-                        )
-                    )
-                )
-                 .save();
+        MT2_gyroSet[0] = getPigeon2().getRotation2d().getDegrees();
+        MT2_gyroSet[1] = 0.0;
+        MT2_gyroSet[2] = 0.0;
+        MT2_gyroSet[3] = 0.0;
+        MT2_gyroSet[4] = 0.0;
+        MT2_gyroSet[5] = 0.0;
+        limelight.getNTTable().getEntry("robot_orientation_set").setDoubleArray(MT2_gyroSet);
         
 
         if(DriverStation.isDisabled())
@@ -399,7 +396,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If the average tag distance is less than 4 meters,
             // there are more than 0 tags in view,
             // and the average ambiguity between tags is less than 30% then we update the pose estimation.
-            if (poseEstimate.avgTagDist < 4 && poseEstimate.tagCount > 0 && poseEstimate.getMinTagAmbiguity() < 0.3)
+            if (poseEstimate.avgTagDist < 5 && poseEstimate.tagCount >= 2 && poseEstimate.getMinTagAmbiguity() < 0.3)
             {
                 addVisionMeasurement(poseEstimate.pose.toPose2d(), poseEstimate.timestampSeconds, LIMELIGHT_STD_DEVS);
                 limelightPosePub.set(poseEstimate.pose.toPose2d());

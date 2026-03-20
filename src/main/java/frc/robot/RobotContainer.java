@@ -145,7 +145,7 @@ public class RobotContainer
             )
             .andThen(
                 Commands.runOnce(
-                    () -> drivetrain.resetPose(new Pose2d(3.568, 4.035, new Rotation2d(0)))
+                    () -> drivetrain.resetPose(new Pose2d(13.025, 4.035, new Rotation2d(Degrees.of(180))))
                 )
             )
         );

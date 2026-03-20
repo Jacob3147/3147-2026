@@ -125,9 +125,10 @@ public class Shooter extends SubsystemBase
 
     MotionMagicVoltage hoodRequest = new MotionMagicVoltage(0);
 
-    double hood_kv = 12.0 / (Constants.MINION_FREE_SPEED / hood_ratio);
-    double hood_ks = 0;
-    double hood_kp = 0;
+    double hood_kv = 12.0 / (Constants.MINION_FREE_SPEED);
+    double hood_ks = 0.18;
+    double hood_kp = 0.4
+    ;
     double hood_kd = 0;
 
 
@@ -140,9 +141,8 @@ public class Shooter extends SubsystemBase
     VoltageOut indexerRequest = new VoltageOut(0);
 
     
-    double shooter_kp = 0;
-    double shooter_kd = 0;
-    double shooter_kv = 12.0 / Constants.KRAKEN_FREE_SPEED;
+    double shooter_kp = 0.75;
+    double shooter_kv = 11.75 / Constants.KRAKEN_FREE_SPEED;
 
     //VoltageOut shooterRequest2 = new VoltageOut(0);
 
@@ -157,7 +157,7 @@ public class Shooter extends SubsystemBase
         shooterSlot0.withKS(0)
                     .withKV(shooter_kv)
                     .withKA(0)
-                    .withKP(0)
+                    .withKP(shooter_kp)
                     .withKI(0)
                     .withKD(0);
         shooterCurrentLimits.StatorCurrentLimit = 60;
@@ -177,9 +177,12 @@ public class Shooter extends SubsystemBase
                  .withKP(hood_kp)
                  .withKI(0)
                  .withKD(hood_kd);
-        hoodCurrentLimits.StatorCurrentLimit = 20;
-        hoodMotionConfigs.MotionMagicAcceleration = 100;
+        hoodCurrentLimits.StatorCurrentLimit = 60;
+        hoodMotionConfigs.MotionMagicAcceleration = 40;
+        hoodMotionConfigs.MotionMagicCruiseVelocity = 40;
         hoodOutputConfig.NeutralMode = NeutralModeValue.Coast;
+        hoodOutputConfig.PeakForwardDutyCycle = 0.7;
+        hoodOutputConfig.PeakReverseDutyCycle = -0.7;
         hoodOutputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
         hoodConfig.Commutation.MotorArrangement = MotorArrangementValue.Minion_JST;
         hood.getConfigurator().apply(hoodConfig);
@@ -205,12 +208,7 @@ public class Shooter extends SubsystemBase
         this.targetSupplier = targetSupplier;
 
         //sending data to network tables to visualize in advantagescope
-
-
-       
-        //distances to note:
-        //1.375 seems to be closest possible shot
-        //5.5 is about the longest shot I could see
+        
 
         //map distance from goal to shot speed
         distance_to_rps.put(0.0,58.0);
@@ -227,20 +225,23 @@ public class Shooter extends SubsystemBase
         
 
         //map distance from goal to hood rotations
-        distance_to_rps.put(0.0,0.0);
-        distance_to_rps.put(1.5,0.0);
-        distance_to_rps.put(2.0,0.0);
-        distance_to_rps.put(2.4,3.0);
-        distance_to_rps.put(2.81,4.5);
-        distance_to_rps.put(3.24,6.0);
-        distance_to_rps.put(3.77,7.88);
-        distance_to_rps.put(4.23,8.8);
-        distance_to_rps.put(5.16,10.88);
-        distance_to_rps.put(7.0,10.88);
+        distance_to_hood.put(0.0,0.0);
+        distance_to_hood.put(1.5,0.0);
+        distance_to_hood.put(2.0,0.0);
+        distance_to_hood.put(2.4,3.0);
+        distance_to_hood.put(2.81,4.5);
+        distance_to_hood.put(3.24,6.0);
+        distance_to_hood.put(3.77,7.88);
+        distance_to_hood.put(4.23,8.8);
+        distance_to_hood.put(5.16,10.88);
+        distance_to_hood.put(7.0,10.88);
         
-        SmartDashboard.putNumber("bringup/shooter pct",0);
+        SmartDashboard.putNumber("bringup/shooter pct",58);
         SmartDashboard.putBoolean("bringup/override shooter", false);
         SmartDashboard.putBoolean("bringup/zero hood", false);
+        
+
+        
     }
 
     @Override
@@ -271,6 +272,7 @@ public class Shooter extends SubsystemBase
         //distance from shooter to target
         targetDistance = Math.sqrt(Math.pow(robotToTarget.getX(),2) + Math.pow(robotToTarget.getY(),2));
         SmartDashboard.putNumber("target distance", targetDistance);
+       
 
         //intended velocity and hood_target (pitch) from lookup table based on distance
         if(!manualMode)
@@ -284,7 +286,9 @@ public class Shooter extends SubsystemBase
             hood_target = 0;
             rps_target = manualVoltage;
         }
-
+        SmartDashboard.putBoolean("auto shot", !manualMode);
+        SmartDashboard.putNumber("hood target", hood_target);
+        SmartDashboard.putNumber("rps target", rps_target);
         shotVelTargetPub.set(rps_target);
         shotVelActPub.set(shooter_1.getVelocity(true).getValueAsDouble());
         shotAngleTargetPub.set(hood_target);
@@ -293,7 +297,7 @@ public class Shooter extends SubsystemBase
         
         if(spinUp)
         {
-            shooterRequest.withVelocity(rps_target);
+            shooterRequest.withVelocity(/*rps_target*/0);
             hoodRequest.withPosition(hood_target);
             //shooterRequest2.withOutput(rps_target);
         }

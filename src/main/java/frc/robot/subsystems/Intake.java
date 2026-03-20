@@ -126,6 +126,9 @@ public class Intake extends SubsystemBase
 
         wheels.setControl(wheelsRequest);
         
+
+        SmartDashboard.putNumber("bringup/intake position", tilt_left.getPosition(true).getValueAsDouble());
+
         if(deploy)
         {
             tiltRequest.withPosition(intake_deployed_pos);
@@ -157,7 +160,7 @@ public class Intake extends SubsystemBase
         () -> {
             deployPrev = deploy;
             deploy = true;
-            wheelsRequest.withOutput(5);
+            wheelsRequest.withOutput(10);
         },
         () -> {
             deploy = deployPrev;
