@@ -14,6 +14,8 @@ import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -81,12 +83,22 @@ public class Robot extends TimedRobot {
         m_robotContainer.teleopInit = false;
 
 
+    //display our auto on dashboard
     try {
       auto_selected = m_robotContainer.getAutonomousCommand().getName();
       if(auto_selected != auto_selected_prev)
       {
+        Pose2d starting_pose;
         auto_selected_prev = auto_selected;
         List<PathPlannerPath> auto_paths = PathPlannerAuto.getPathGroupFromAutoFile(auto_selected);
+        if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red)
+        {
+          starting_pose = auto_paths.get(0).flipPath().getStartingHolonomicPose().get();
+        }
+        else
+        {
+          starting_pose = auto_paths.get(0).getStartingHolonomicPose().get();
+        }
         List<Pose2d> poses = new ArrayList<>();
         for (PathPlannerPath path : auto_paths) 
         {
@@ -98,7 +110,8 @@ public class Robot extends TimedRobot {
             .collect(Collectors.toList()));
         }
 
-        m_robotContainer.drivetrain.odometryField.getObject("path").setPoses(poses);
+        m_robotContainer.drivetrain.odometryField.getObject("starting").setPose(starting_pose);
+        m_robotContainer.drivetrain.odometryField.getObject("trajectoryAuto").setPoses(poses);
       }
       } catch (Exception e) {
         e.printStackTrace();
@@ -126,9 +139,10 @@ public class Robot extends TimedRobot {
     SmartDashboard.putBoolean("hub active", true);
     m_robotContainer.teleopInit = false;
   }
-
+  Alert test = new Alert("Test!", AlertType.kError);
   @Override
   public void teleopInit() {
+    test.set(true);
     // This makes sure that the autonomous stops running when
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
@@ -137,7 +151,8 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
     m_robotContainer.teleopInit = true;
-    m_robotContainer.drivetrain.odometryField.getObject("path").setPose(null);
+    m_robotContainer.drivetrain.odometryField.getObject("starting").setPose(new Pose2d(-100,-100,Rotation2d.kZero));
+    m_robotContainer.drivetrain.odometryField.getObject("trajectoryAuto").setPose(new Pose2d(-100,-100,Rotation2d.kZero));
   }
 
   double matchTime;
