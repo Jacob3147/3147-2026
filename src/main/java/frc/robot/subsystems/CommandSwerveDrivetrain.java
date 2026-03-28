@@ -16,8 +16,14 @@ import limelight.networktables.PoseEstimate;
 import limelight.networktables.LimelightPoseEstimator.EstimationMode;
 import limelight.networktables.LimelightSettings.LEDMode;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.json.simple.parser.ParseException;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
@@ -27,10 +33,15 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
+import com.pathplanner.lib.util.PPLibTelemetry;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -53,6 +64,8 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -96,6 +109,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     
     
+    
     //QuestNav questNav;
     Limelight limelight;
 
@@ -109,6 +123,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     LimelightPoseEstimator limelightPoseEstimator;
     Optional<PoseEstimate> visionEstimate;
     Rotation2d angleToSpeaker;
+    public Field2d odometryField = new Field2d();
     
     double xToSpeaker;
     double yToSpeaker;
@@ -119,6 +134,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     DoublePublisher questBatteryPub = NetworkTableInstance.getDefault().getDoubleTopic("Quest/battery").publish();
     StructPublisher<Pose2d> questPosePub = NetworkTableInstance.getDefault().getStructTopic("Quest/pose",Pose2d.struct).publish();
     StructPublisher<Pose2d> limelightPosePub = NetworkTableInstance.getDefault().getStructTopic("Limelight/pose", Pose2d.struct).publish();
+    
 
     public Translation3d our_hub = new Translation3d();
     public double our_hub_x;
@@ -142,7 +158,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
         .withDriveRequestType(DriveRequestType.Velocity);
 
-
+    
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
      * <p>
@@ -265,6 +281,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 m_hasAppliedOperatorPerspective = true;
             });
         }
+
+        
+        
+
+    
+        
+        
+        odometryField.setRobotPose(getState().Pose);
+        
+        SmartDashboard.putData("Field", odometryField);
 
         periodicVisionTasks();
         //"Quest Battery", questNav.getBatteryPercent());

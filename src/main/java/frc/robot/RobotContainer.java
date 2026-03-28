@@ -61,11 +61,13 @@ public class RobotContainer
     private final Supplier<Double> stickLeftSupplier = () -> {return -joystick.getX()*MaxSpeed/2;};
 
     //drivetrain and suppliers from drivetrain
-    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    
+    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
     private final Supplier<Pose2d> poseSupplier = () -> {return drivetrain.getState().Pose;};
     private final Supplier<ChassisSpeeds> speedsSupplier = () -> {return drivetrain.getState().Speeds;};
     private final Supplier<Translation3d> targetSupplier = () -> {return drivetrain.our_hub;};
+    
 
     //shooter and suppliers from shooter
     private final Shooter shooter = new Shooter(poseSupplier, speedsSupplier, targetSupplier);
@@ -74,6 +76,7 @@ public class RobotContainer
     
     private final Supplier<Rotation2d> shotTargetYaw = () -> {return shooter.targetYaw();};
 
+    
     private final SendableChooser<Command> autoChooser;
     
 
@@ -83,9 +86,9 @@ public class RobotContainer
         NamedCommands.registerCommand("Intake", intake.spin());
         NamedCommands.registerCommand("Spin up", Commands.runOnce(() ->shooter.spinUp()));
         NamedCommands.registerCommand("Shoot",shooter.indexer().repeatedly().until(cancelCommands));
-        autoChooser = AutoBuilder.buildAutoChooser("Tests");
 
-        SmartDashboard.putData("Auto Mode", autoChooser);
+        autoChooser = AutoBuilder.buildAutoChooser("Tests");
+        SmartDashboard.putData("Auto Mode", autoChooser);        
 
         // Configure the trigger bindings
         configureBindings();

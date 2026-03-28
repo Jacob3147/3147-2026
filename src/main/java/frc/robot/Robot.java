@@ -4,8 +4,16 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -64,11 +72,37 @@ public class Robot extends TimedRobot {
 
   }
 
+  String auto_selected = "";
+  String auto_selected_prev = "";
   @Override
   public void disabledPeriodic() 
   {
     SmartDashboard.putBoolean("hub active", true);
         m_robotContainer.teleopInit = false;
+
+
+    try {
+      auto_selected = m_robotContainer.getAutonomousCommand().getName();
+      if(auto_selected != auto_selected_prev)
+      {
+        auto_selected_prev = auto_selected;
+        List<PathPlannerPath> auto_paths = PathPlannerAuto.getPathGroupFromAutoFile(auto_selected);
+        List<Pose2d> poses = new ArrayList<>();
+        for (PathPlannerPath path : auto_paths) 
+        {
+          if(DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red) path = path.flipPath();
+          poses.addAll(path.getAllPathPoints().stream().map(
+            point -> new Pose2d(point.position.getX(), 
+            point.position.getY(), 
+            new Rotation2d()))
+            .collect(Collectors.toList()));
+        }
+
+        m_robotContainer.drivetrain.odometryField.getObject("path").setPoses(poses);
+      }
+      } catch (Exception e) {
+        e.printStackTrace();
+    }
 
   }
 
@@ -103,7 +137,7 @@ public class Robot extends TimedRobot {
       m_autonomousCommand.cancel();
     }
     m_robotContainer.teleopInit = true;
-    
+    m_robotContainer.drivetrain.odometryField.getObject("path").setPose(null);
   }
 
   double matchTime;
